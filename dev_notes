@@ -1,0 +1,84 @@
+Purpose: The STAR PWA aims to systematically assess and categorize the reading levels of non-readers (students with limited or no reading proficiency) at Tropical Village National High School. It will use speech recognition to evaluate oral reading and comprehension, helping teachers identify students’ reading stages (e.g., pre-reader, emergent reader) and recommend tailored interventions.
+Target Users: Teachers and literacy coordinators at Tropical Village National High School, with students as the primary participants during assessments.
+Core Features:
+Reading Assessment: Students read short passages aloud using speech recognition to capture their pronunciation and fluency.
+Level Categorization: Automatically categorize students into reading levels based on accuracy, speed, and comprehension (e.g., non-reader, pre-reader, emergent reader).
+Progress Tracking: Store assessment results locally (offline) to track student progress over time.
+Teacher Dashboard: Allow teachers to view student profiles, assessment results, and recommended reading strategies.
+Offline Support: Enable full functionality in areas with limited internet, common in rural settings like Tropical Village.
+PWA Features: Installable on devices, with a native app-like experience and offline caching.
+Speech Recognition: Use the Web Speech API to analyze spoken input during reading tasks, with text input as a fallback for unsupported browsers.
+Reading Levels (Example Categories):
+Non-Reader: Cannot recognize letters or words.
+Pre-Reader: Recognizes some letters and sounds but cannot form words.
+Emergent Reader: Reads simple words with support but struggles with sentences.
+(Further levels can be defined based on school standards.)
+Project Structure
+The file structure remains similar to the previous suggestion but is tailored to the STAR system’s focus on reading assessment. It’s organized for modularity and scalability, with assets and components specific to reading levels and speech-based evaluation.
+
+
+
+----- File Structure -------
+
+htdocs/
+└── star-app/
+    ├── public/
+    │   ├── index.html           # Main HTML file
+    │   ├── manifest.json        # PWA manifest for STAR branding
+    │   ├── favicon.ico          # STAR favicon
+    │   ├── logo192.png          # PWA icon (192x192)
+    │   ├── logo512.png          # PWA icon (512x512)
+    │   └── robots.txt           # SEO settings
+    ├── src/
+    │   ├── assets/              # Static assets
+    │   │   ├── images/          # Images for passages or UI
+    │   │   ├── audio/           # Audio for feedback or sample readings
+    │   │   └── data/            # Reading passages and assessment data
+    │   │       └── passages.json # Reading passages by level
+    │   ├── components/          # Reusable React components
+    │   │   ├── Assessment/      # Assessment-related components
+    │   │   │   ├── ReadingTest.js # Main reading assessment component
+    │   │   │   ├── Passage.js   # Displays reading passage
+    │   │   │   ├── Result.js    # Shows assessment results
+    │   │   │   └── LevelIndicator.js # Displays reading level
+    │   │   ├── Speech/          # Speech recognition components
+    │   │   │   └── SpeechReader.js # Captures spoken reading
+    │   │   ├── Dashboard/       # Teacher dashboard components
+    │   │   │   ├── StudentList.js # Lists students and their levels
+    │   │   │   └── StudentProfile.js # Detailed student data
+    │   │   └── UI/              # General UI components
+    │   │       ├── Button.js    # Reusable button
+    │   │       └── Loader.js    # Loading spinner
+    │   ├── pages/               # Page-level components
+    │   │   ├── Home.js          # Landing page for teachers
+    │   │   ├── AssessmentPage.js # Reading assessment interface
+    │   │   └── DashboardPage.js # Teacher dashboard
+    │   ├── hooks/               # Custom React hooks
+    │   │   └── useSpeechReader.js # Hook for speech recognition
+    │   ├── styles/              # CSS or styled-components
+    │   │   ├── App.css          # Global styles
+    │   │   └── Assessment.css   # Assessment-specific styles
+    │   ├── utils/               # Utility functions
+    │   │   └── evaluateReading.js # Logic for categorizing reading levels
+    │   ├── App.js               # Main app component
+    │   ├── index.js             # Entry point
+    │   ├── service-worker.js    # Custom service worker for PWA
+    │   ├── serviceWorkerRegistration.js # Service worker registration
+    │   └── App.test.js          # Optional tests
+    ├── .gitignore               # Git ignore
+    ├── package.json                # Dependencies
+    └── README.md                   # Documentation
+
+
+
+// Database config
+$host = 'localhost';
+$db   = 'u576433449_star_pwa';
+$user = 'u576433449_TVNHS_STAR';
+$pass = '123_213$Star';
+$charset = 'utf8mb4';
+
+
+ADMIN:
+- Implement No Refresh when Adding or Deleting (CRUD) - DONE
+- Add a column where a student gets registered under a teacher (it should display the Teacher in Charge) - DONE
