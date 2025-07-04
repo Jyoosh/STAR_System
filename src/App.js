@@ -1,6 +1,9 @@
 // src/App.js
 import React, { useContext, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import { AuthContext } from './auth/AuthContext';
 import PrivateRoute from './auth/PrivateRoute';
 import RoleRoute from './auth/RoleRoute';
@@ -16,8 +19,6 @@ import { ReactComponent as StarLogo } from './assets/STAR_Logo.svg';
 
 export default function App() {
   const { user, logout } = useContext(AuthContext);
-
-  // <-- ADD: control for your trial modal
   const [showTrial, setShowTrial] = useState(false);
 
   return (
@@ -26,13 +27,11 @@ export default function App() {
         {/* Header */}
         <header className="bg-blue-600 text-white shadow-md">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-            {/* Logo/Title */}
             <Link to="/" className="flex items-center gap-2 hover:text-yellow-300 transition">
               <StarLogo className="w-8 h-8" />
               <span className="text-xl sm:text-2xl font-bold tracking-widest">STAR</span>
             </Link>
 
-            {/* Navigation */}
             <nav className="space-x-4 text-sm sm:text-base" aria-label="Main Navigation">
               {!user && (
                 <>
@@ -75,7 +74,6 @@ export default function App() {
               }
             />
 
-            {/* Admin-only */}
             <Route
               path="/admin"
               element={
@@ -87,7 +85,6 @@ export default function App() {
               }
             />
 
-            {/* Teacher-only */}
             <Route
               path="/teacher"
               element={
@@ -99,20 +96,17 @@ export default function App() {
               }
             />
 
-            {/* Student-only */}
             <Route
               path="/student"
               element={
                 <PrivateRoute>
                   <RoleRoute role="Student">
-                    {/* Here we button to launch trial */}
                     <StudentDashboard onLaunchTrial={() => setShowTrial(true)} />
                   </RoleRoute>
                 </PrivateRoute>
               }
             />
 
-            {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
@@ -123,7 +117,10 @@ export default function App() {
         </footer>
       </div>
 
-      {/* Single Backdrop + Modal */}
+      {/* Global Toasts */}
+      <ToastContainer position="top-right" autoClose={4000} />
+
+      {/* Trial Modal */}
       {showTrial && (
         <div className="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center">
           <TrialReadingTest onClose={() => setShowTrial(false)} />

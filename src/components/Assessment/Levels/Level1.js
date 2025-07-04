@@ -4,25 +4,26 @@ import Confetti from 'react-confetti';
 const aliases = {
   A: ['ay', 'a'], B: ['bee', 'be'], C: ['see', 'sea'], D: ['dee', 'd'], E: ['ee', 'e'],
   F: ['ef', 'eff'], G: ['gee'], H: ['aitch', 'h'], I: ['eye', 'i'], J: ['jay'],
-  K: ['kay'], L: ['el'], M: ['em'], N: ['en'], O: ['oh'], P: ['pee'], Q: ['queue', 'cue'],
-  R: ['ar', 'are'], S: ['ess'], T: ['tee'], U: ['you', 'yew', 'u'], V: ['vee'],
-  W: ['double you'], X: ['ex'], Y: ['why'], Z: ['zee', 'zed']
+  K: ['kay'], L: ['el'], M: ['em'], N: ['en'], O: ['oh'], P: ['pee'],
+  Q: ['queue', 'cue'], R: ['ar', 'are'], S: ['ess'], T: ['tee'],
+  U: ['you', 'yew', 'u'], V: ['vee'], W: ['double you'], X: ['ex'],
+  Y: ['why'], Z: ['zee', 'zed']
 };
 
+
 export default function Level1({ onComplete }) {
+  const totalQuestions = 10;
   const [letters, setLetters] = useState([]);
   const [idx, setIdx] = useState(0);
   const [status, setStatus] = useState('🔄 Preparing...');
   const [transcript, setTranscript] = useState('');
   const [listening, setListening] = useState(false);
   const [failCount, setFailCount] = useState(0);
-  const [hasPlayed, setHasPlayed] = useState(false);
-  const [animation, setAnimation] = useState('');
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [countdown, setCountdown] = useState(0);
   const [score, setScore] = useState(0);
   const [completed, setCompleted] = useState(false);
-  const [speechReady, setSpeechReady] = useState(false);
+  const [hasAnyMistake, setHasAnyMistake] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const lettersRef = useRef([]);
   const idxRef = useRef(0);
@@ -50,6 +51,7 @@ export default function Level1({ onComplete }) {
     audio.play().catch((err) => console.warn('Sound error:', err));
   };
 
+  // ✅ KEY FIX in this block:
   const advance = useCallback(() => {
     const next = idxRef.current + 1;
     if (next < lettersRef.current.length) {
@@ -61,33 +63,25 @@ export default function Level1({ onComplete }) {
       setShowConfetti(true);
       setStatus('🎉 Level complete!');
       setCompleted(true);
-      setTimeout(() => {
-        onComplete(score);
-      }, 1500);
+      const passed = !hasAnyMistake;
+      setTimeout(() => onComplete({ score, passed }), 1500); // ✅ send actual score and pass status
     }
-  }, [onComplete, score]);
+  }, [onComplete, hasAnyMistake, score]);
 
-  const skipToResults = useCallback(() => {
-    setCompleted(true);
-    setShowConfetti(true);
-    setStatus('🎉 Skipped to results.');
-    setTimeout(() => {
-      onComplete(score);
-    }, 1500);
-  }, [onComplete, score]);
+
+  const skipQuestion = () => {
+    setHasAnyMistake(true);
+    advance();
+  };
 
   useEffect(() => {
-    const randomLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').sort(() => 0.5 - Math.random()).slice(0, 10);
+    const randomLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').sort(() => 0.5 - Math.random()).slice(0, totalQuestions);
     setLetters(randomLetters);
     lettersRef.current = randomLetters;
   }, []);
 
   useEffect(() => {
     idxRef.current = idx;
-    setHasPlayed(false);
-    setFailCount(0);
-    setAnimation('');
-    setTranscript('');
   }, [idx]);
 
   useEffect(() => {
@@ -109,7 +103,6 @@ export default function Level1({ onComplete }) {
     recognition.onend = () => {
       recognitionRunningRef.current = false;
       setListening(false);
-      setStatus('🎧 Listening… Please say the letter and wait.');
     };
 
     recognition.onerror = (event) => {
@@ -120,21 +113,25 @@ export default function Level1({ onComplete }) {
 
     recognition.onresult = (event) => {
       if (completed) return;
-
       const raw = event.results[0][0].transcript.trim();
       const heardWords = raw.split(/\s+/);
       const expected = lettersRef.current[idxRef.current];
-      const accepted = [expected.toLowerCase(), ...(aliases[expected] || []).map(a => a.toLowerCase())];
+
+      // 🔧 SAFE ALIAS HANDLING (handles both array or single string)
+      const aliasList = Array.isArray(aliases[expected])
+        ? aliases[expected]
+        : [aliases[expected]].filter(Boolean);
+
+      const accepted = [expected.toLowerCase(), ...aliasList.map(a => a.toLowerCase())];
+
+
 
       setTranscript(raw);
       setStatus('⏳ Processing...');
 
       let correctRepetitions = 0;
       for (const word of heardWords) {
-        const normalizedWord = word.toLowerCase();
-        if (accepted.includes(normalizedWord)) {
-          correctRepetitions++;
-        }
+        if (accepted.includes(word.toLowerCase())) correctRepetitions++;
       }
 
       setTimeout(() => {
@@ -142,29 +139,20 @@ export default function Level1({ onComplete }) {
 
         if (correctRepetitions >= 1) {
           playSound(dingSound);
-          setStatus(`✅ Correct: "${raw}" (Detected ${correctRepetitions} correct repetitions)`);
-          setScore((prev) => prev + 1);
-          setAnimation('animate-bounce');
-          setTimeout(() => {
-            setAnimation('');
-            advance();
-          }, 1000);
+          setStatus(`✅ Correct: "${raw}"`);
+          setScore(prev => prev + 1);
+          setTimeout(() => advance(), 1000);
         } else {
           const tries = failCount + 1;
           setFailCount(tries);
           playSound(incorrectSound);
-          setAnimation('animate-shake');
+          setHasAnyMistake(true);
 
           if (tries >= 3) {
-            const word = sampleWord(expected);
-            setStatus(`❌ Incorrect 3 times. Say "${expected}" like "${word}".`);
-            setTimeout(() => {
-              setAnimation('');
-              advance();
-            }, 3000);
+            setStatus(`❌ Incorrect 3 times. The letter was "${expected}".`);
+            setTimeout(() => advance(), 3000);
           } else {
             setStatus(`❌ Heard "${raw}". Try again (${tries}/3).`);
-            setTimeout(() => setAnimation(''), 1000);
           }
         }
       }, 1000);
@@ -174,55 +162,28 @@ export default function Level1({ onComplete }) {
     setStatus('✅ Ready to start');
   }, [failCount, advance, completed]);
 
-  useEffect(() => {
-    const voices = speechSynthesis.getVoices();
-    if (voices.length) {
-      setSpeechReady(true);
-    } else {
-      speechSynthesis.onvoiceschanged = () => {
-        setSpeechReady(true);
-      };
-    }
-  }, []);
-
   const startListening = () => {
-    if (!speechReady) {
-      setStatus('🧠 Initializing speech synthesis… Please wait.');
-      return;
-    }
-
     if (!recognitionRef.current || recognitionRunningRef.current) return;
 
-    const beginCountdown = () => {
-      let count = 3;
+    let count = 3;
+    setCountdown(count);
+    setStatus('⏳ Get ready...');
+    countdownRef.current = setInterval(() => {
+      count--;
       setCountdown(count);
-      setStatus('⏳ Get ready to speak...');
-      countdownRef.current = setInterval(() => {
-        count--;
-        setCountdown(count);
-        if (count <= 0) {
-          clearInterval(countdownRef.current);
-          setStatus('🎤 Speak now!');
-          setTimeout(() => {
-            try {
-              speechSynthesis.cancel();
-              recognitionRef.current.start();
-              recognitionRunningRef.current = true;
-              setListening(true);
-              setStatus('🎧 Listening… Please say the letter and wait.');
-            } catch (err) {
-              setStatus('⚠️ Mic error. Try again.');
-            }
-          }, 500);
+      if (count <= 0) {
+        clearInterval(countdownRef.current);
+        setCountdown(0);
+        try {
+          recognitionRef.current.start();
+          recognitionRunningRef.current = true;
+          setListening(true);
+          setStatus('🎧 Speak now!');
+        } catch (err) {
+          setStatus('⚠️ Mic error. Try again.');
         }
-      }, 1000);
-    };
-
-    if (!hasPlayed) {
-      speakLetter(beginCountdown);
-    } else {
-      beginCountdown();
-    }
+      }
+    }, 1000);
   };
 
   const stopListening = () => {
@@ -233,39 +194,6 @@ export default function Level1({ onComplete }) {
     }
     setListening(false);
     setStatus('🛑 Stopped');
-  };
-
-  const speakLetter = (onDone) => {
-    if (!speechReady) {
-      setStatus('🧠 Initializing speech synthesis… Please wait.');
-      if (typeof onDone === 'function') onDone();
-      return;
-    }
-
-    if (hasPlayed) {
-      if (typeof onDone === 'function') onDone();
-      return;
-    }
-
-    const letter = letters[idx];
-    const word = sampleWord(letter);
-    const utter = new SpeechSynthesisUtterance(`${letter}, as in ${word}`);
-    utter.lang = 'en-US';
-    utter.pitch = 1.2;
-    utter.rate = 1;
-
-    const voices = speechSynthesis.getVoices();
-    const lively = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
-    if (lively) utter.voice = lively;
-
-    utter.onend = () => {
-      setHasPlayed(true);
-      setStatus('🕒 Get ready to speak…');
-      if (typeof onDone === 'function') onDone();
-    };
-
-    speechSynthesis.cancel();
-    speechSynthesis.speak(utter);
   };
 
   return (
@@ -284,66 +212,43 @@ export default function Level1({ onComplete }) {
               Letter {idx + 1} of {letters.length}
             </p>
 
-            <div className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-center text-indigo-700 ${animation}`}>
+            <div className="text-6xl font-extrabold text-center text-indigo-700">
               {letters[idx]}
             </div>
 
-            <div className="text-center text-gray-500 text-sm sm:text-base">
+            <p className="text-center text-gray-500 text-sm">
               Say: <strong>{letters[idx]} as in "{sampleWord(letters[idx])}"</strong>
-            </div>
-
-            <div className="text-center text-gray-500 text-sm sm:text-base">
-              Attempt: <strong>{Math.min(failCount + 1, 3)} of 3</strong>
-            </div>
+            </p>
+            <p className="text-center text-xs text-gray-500">You may speak 2 or more times in order for your voice to be recognized.</p>
 
             <button
               onClick={startListening}
               disabled={listening || countdown > 0}
-              className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-base sm:text-lg"
+              className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
             >
-              {countdown > 0 ? `⏳ ${countdown}` : (listening ? '🎧 Listening…' : '🎤 Start Listening')}
+              {countdown > 0 ? `⏳ ${countdown === 0 ? 'Speak now' : countdown}` : (listening ? '🎧 Listening…' : '🎤 Start Listening')}
             </button>
 
             {listening && (
               <button
                 onClick={stopListening}
-                className="w-full py-2 bg-red-500 text-white rounded hover:bg-red-600 transition text-base sm:text-lg"
+                className="w-full py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
               >
                 🛑 Stop
               </button>
             )}
 
-            {!hasPlayed && (
-              <button
-                onClick={speakLetter}
-                className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition text-base sm:text-lg"
-              >
-                🔊 Hear How to Say It
-              </button>
-            )}
+            <button
+              onClick={skipQuestion}
+              className="w-full py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
+            >
+              ⏭️ Skip Question
+            </button>
 
-            {idx < letters.length - 1 && (
-              <button
-                onClick={advance}
-                className="w-full py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-base sm:text-lg"
-              >
-                ⏭️ Skip Letter
-              </button>
-            )}
-
-            {idx === letters.length - 1 && (
-              <button
-                onClick={skipToResults}
-                className="w-full py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition text-base sm:text-lg"
-              >
-                ⏩ Skip to Results
-              </button>
-            )}
-
-            <pre className="text-xs sm:text-sm text-gray-700 whitespace-pre-line mt-2">{status}</pre>
+            <pre className="text-xs text-gray-700 whitespace-pre-line mt-2">{status}</pre>
 
             {transcript && (
-              <div className="text-center mt-2 text-gray-800 text-sm sm:text-base">
+              <div className="text-center mt-2 text-gray-800 text-sm">
                 <span className="font-semibold">You said:</span> {transcript}
               </div>
             )}

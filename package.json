@@ -5,7 +5,7 @@
   "dependencies": {
     "cra-template-pwa": "2.0.0",
     "dexie": "^4.0.11",
-    "framer-motion": "^12.19.2",
+    "framer-motion": "^12.23.0",
     "fuzzball": "^2.2.2",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.525.0",
@@ -20,6 +20,7 @@
     "react-router-dom": "^6.22.3",
     "react-scripts": "^5.0.1",
     "react-toastify": "^11.0.5",
+    "react-tooltip": "^5.29.1",
     "react-tsparticles": "^2.12.2",
     "use-sound": "^5.0.0",
     "web-vitals": "^5.0.3"

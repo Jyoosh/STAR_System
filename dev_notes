@@ -79,6 +79,19 @@ $pass = '123_213$Star';
 $charset = 'utf8mb4';
 
 
+Notes:
+I'd like to change the mechanics for Level 1 (and all levels actually), once the user has made a mistake or 1 wrong answer (3 attempts), by the end of the level. Although the result is still recorded, but they won't be able to proceed to the next level until they perfect it. Then automatically, it will show what the score is and will display "Your Reading Level is Level 1!". 
+
+Then if the user passed level 1, the score will be recorded for level 1. Then stops at level 2 if they fail one question in level 2. So on.
+
+Level 1 is now:
+- No Letter Sound
+- The user needs to say what letter (5 Questions)
+- then the other 5 Questions, the user then needs to match the small letters to the big letters.
+- Random and shuffled. Same configurations with the current Level 1.
+
+New: Add a fallback option (don't call it fallback) to enter/type the letter for users/students with speech defect such those with cleft palate
+
 ADMIN:
 - Implement No Refresh when Adding or Deleting (CRUD) - DONE
 - Add a column where a student gets registered under a teacher (it should display the Teacher in Charge) - DONE
