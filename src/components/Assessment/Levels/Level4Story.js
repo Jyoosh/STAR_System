@@ -19,23 +19,37 @@ From that day on, Raj’s reputation as an honest boy spread throughout the vill
 const Level4Story = ({ onComplete }) => {
   const [hasRead, setHasRead] = useState(false);
 
-  const handleProceed = () => {
-    setHasRead(true);
-    onComplete(); // Proceed to the quiz
-  };
+  const handleRead = () => setHasRead(true);
+  const handleProceed = () => onComplete();
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center px-4 sm:px-6">
-      <div className="w-full sm:max-w-lg md:max-w-xl bg-white shadow-xl rounded-lg space-y-4 p-4 sm:p-6 md:p-8 relative">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-700">Story of the Honest Boy</h2>
-        <p className="text-gray-600 text-center mb-4">{storyText}</p>
-        <button
-          onClick={handleProceed}
-          className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-          disabled={hasRead}
-        >
-          {hasRead ? 'Proceed to Quiz' : 'I Have Read the Story'}
-        </button>
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl bg-white shadow-xl rounded-lg p-4 sm:p-6 md:p-8 relative max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center text-blue-700 mb-4">
+          📖 Story of the Honest Boy
+        </h2>
+
+        <div className="text-gray-700 text-justify whitespace-pre-line leading-relaxed max-h-[60vh] overflow-y-auto border border-gray-200 rounded p-4 bg-gray-50">
+          {storyText}
+        </div>
+
+        <div className="mt-6 space-y-3">
+          {!hasRead ? (
+            <button
+              onClick={handleRead}
+              className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            >
+              I Have Read the Story
+            </button>
+          ) : (
+            <button
+              onClick={handleProceed}
+              className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+            >
+              Proceed to Quiz
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

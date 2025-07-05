@@ -176,40 +176,40 @@ export default function TrialReadingTest({ onClose }) {
   };
 
   return (
-    <>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm p-4">
       {showConfetti && <Confetti numberOfPieces={400} recycle={false} gravity={0.4} />}
-      <div className="w-full sm:max-w-lg md:max-w-xl bg-white shadow-xl rounded-lg space-y-4 p-4 sm:p-6 md:p-8 relative mx-auto">
-        <button onClick={onClose} className="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl" title="Exit trial">✖</button>
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-700">🧪 Alphabet Trial</h2>
+      <div className="w-full max-w-xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 md:p-10 relative overflow-y-auto max-h-[90vh]">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-xl" title="Exit trial">✖</button>
+        <h2 className="text-2xl sm:text-3xl font-bold text-center text-blue-700 mb-4">🧪 Alphabet Trial</h2>
 
         {completed ? (
           <div className="text-center text-lg sm:text-xl text-green-700">
             ✅ You finished! Your score: <strong>{score}</strong> out of <strong>{letters.length}</strong>.
-            <button onClick={onClose} className="mt-4 w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700">🎉 Finish</button>
+            <button onClick={onClose} className="mt-6 w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700">🎉 Finish</button>
           </div>
         ) : (
           <>
             <p className="text-center text-gray-600 text-sm">Letter {idx + 1} of {letters.length}</p>
             <div className={`text-6xl font-extrabold text-center text-indigo-700 ${animation}`}>{letters[idx]}</div>
-            <div className="text-center text-gray-500 text-sm">Say: <strong>{letters[idx]} as in "{sampleWord(letters[idx])}"</strong></div>
+            <p className="text-center text-gray-500 text-sm mb-1">Say: <strong>{letters[idx]} as in "{sampleWord(letters[idx])}"</strong></p>
             <p className="text-center text-gray-500 text-sm">Attempt: <strong>{Math.min(failCount + 1, 3)} of 3</strong></p>
 
-            <button onClick={startListening} disabled={listening || countdown > 0} className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-base sm:text-lg">
+            <button onClick={startListening} disabled={listening || countdown > 0} className="w-full mt-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-lg">
               {countdown > 0 ? `⏳ ${countdown}` : (listening ? '🎧 Listening…' : '🎤 Start Listening')}
             </button>
-            {listening && <button onClick={stopListening} className="w-full mt-2 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition text-base sm:text-lg">🛑 Stop</button>}
-            {!hasPlayed && <button onClick={() => speakLetter()} className="w-full mt-2 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition text-base sm:text-lg">🔊 Hear How to Say It</button>}
+            {listening && <button onClick={stopListening} className="w-full mt-2 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition text-lg">🛑 Stop</button>}
+            {!hasPlayed && <button onClick={() => speakLetter()} className="w-full mt-2 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition text-lg">🔊 Hear How to Say It</button>}
             {idx < letters.length - 1 ? (
-              <button onClick={advance} className="w-full mt-2 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-base sm:text-lg">⏭️ Skip Letter</button>
+              <button onClick={advance} className="w-full mt-2 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-lg">⏭️ Skip Letter</button>
             ) : (
-              <button onClick={skipToResults} className="w-full mt-2 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition text-base sm:text-lg">⏩ Skip to Results</button>
+              <button onClick={skipToResults} className="w-full mt-2 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition text-lg">⏩ Skip to Results</button>
             )}
 
-            <pre className="text-xs sm:text-sm text-gray-700 whitespace-pre-line mt-2">{status}</pre>
+            <pre className="text-xs sm:text-sm text-gray-700 whitespace-pre-line mt-4">{status}</pre>
             {transcript && <p className="text-center text-gray-800 mt-1"><strong>You said:</strong> {transcript}</p>}
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }

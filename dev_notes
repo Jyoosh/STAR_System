@@ -95,3 +95,6 @@ New: Add a fallback option (don't call it fallback) to enter/type the letter for
 ADMIN:
 - Implement No Refresh when Adding or Deleting (CRUD) - DONE
 - Add a column where a student gets registered under a teacher (it should display the Teacher in Charge) - DONE
+
+TO DO:
+- Teacher Dashboard, Assessment, and Results

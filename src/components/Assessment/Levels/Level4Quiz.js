@@ -74,14 +74,8 @@ const Level4Quiz = ({ onComplete }) => {
                     score >= questions.length / 2 ? 'Good job! 👍' : 'Keep practicing!'}
                 </p>
                 <button
-                  onClick={() =>
-                    onComplete({
-                      total: score,
-                      levelScores: { level4: score },
-                      levelLabel: 'level4',
-                      maxScore: questions.length,
-                    })
-                  }                  // Pass score to parent
+onClick={() => onComplete(score)}
+
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                 >
                   See Results

@@ -67,7 +67,7 @@ export default function AssessmentHistory({
   if (!history.length) {
     return (
       <p className="mt-2 text-gray-600">
-        You haven’t started any assessments yet.
+        {/* You haven’t started any assessments yet. */}
       </p>
     );
   }

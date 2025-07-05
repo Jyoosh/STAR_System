@@ -1,74 +1,91 @@
 import React, { useState } from 'react';
 import StartAssessmentModal from '../StartAssessmentModal';
-import Level1 from './Levels/Level1';
-import Level2 from './Levels/Level2';
-import Level3 from './Levels/Level3';
-import Level4Story from './Levels/Level4Story';
-import Level4Quiz from './Levels/Level4Quiz';
 
 const AssessmentFlow = () => {
-  const [currentLevel, setCurrentLevel] = useState(0);
-  const [scores, setScores] = useState({
-    level1: 0,
-    level2: 0,
-    level3: 0,
-    level4: 0,
-  });
+  const [debugUnlocked, setDebugUnlocked] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+  const [password, setPassword] = useState('');
+  const [assessmentResult, setAssessmentResult] = useState(null);
 
-  const handleLevelComplete = (levelKey, score) => {
-    // store the score
-    setScores(s => ({ ...s, [levelKey]: score }));
-    // advance to the next level
-    setCurrentLevel(cl => cl + 1);
+  const unlockDebug = () => {
+    if (password === '123') {
+      setDebugUnlocked(true);
+      console.log('[DEBUG] Debug mode unlocked');
+    } else {
+      alert('Incorrect password');
+    }
   };
 
-  // Render Start modal at level 0
-  if (currentLevel === 0) {
-    return (
-      <StartAssessmentModal
-        onStart={() => setCurrentLevel(1)}
-      />
-    );
-  }
+  return (
+    <div className="p-4 space-y-4 text-center">
+      {!assessmentResult ? (
+        <>
+<StartAssessmentModal
+  onClose={() => console.log('[DEBUG] Modal closed')}
+  onComplete={(result) => {
+    setAssessmentResult(result);
+    console.log('[DEBUG] Assessment complete:', result);
+  }}
+  debugAutoPass={debugMode}
+/>
 
-  // Levels 1–3
-  if (currentLevel === 1) {
-    return <Level1 onComplete={score => handleLevelComplete('level1', score)} />;
-  }
-  if (currentLevel === 2) {
-    return <Level2 onComplete={score => handleLevelComplete('level2', score)} />;
-  }
-  if (currentLevel === 3) {
-    return <Level3 onComplete={score => handleLevelComplete('level3', score)} />;
-  }
+          {!debugUnlocked ? (
+            <div className="mt-4">
+              <input
+                type="password"
+                placeholder="Enter debug password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="border px-3 py-1 rounded"
+              />
+              <button
+                onClick={unlockDebug}
+                className="ml-2 px-3 py-1 bg-blue-600 text-white rounded"
+              >
+                Unlock Debug
+              </button>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  checked={debugMode}
+                  onChange={() => {
+                    setDebugMode(prev => !prev);
+                    console.log(`[DEBUG] Debug Auto-Pass ${!debugMode ? 'enabled' : 'disabled'}`);
+                  }}
+                  className="mr-2"
+                />
+                Enable Debug Auto-Pass
+              </label>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="p-4 text-center">
+          <h2 className="text-2xl font-bold mb-4">Assessment Finished</h2>
+          <p className="text-lg font-semibold">
+            Your Reading Level is <strong>{assessmentResult.levelLabel}</strong>!
+          </p>
+          <ul className="my-4 text-left inline-block">
+            <li>Level 1: {assessmentResult.levelScores.level1}/10</li>
+            <li>Level 2: {assessmentResult.levelScores.level2}/10</li>
+            <li>Level 3: {assessmentResult.levelScores.level3}/10</li>
+            <li>Level 4: {assessmentResult.levelScores.level4}/10</li>
+          </ul>
+          <h3 className="text-lg font-semibold">Total Score: {assessmentResult.total}</h3>
 
-  // Level 4 has two parts: story then quiz
-  if (currentLevel === 4) {
-    return <Level4Story onContinue={() => setCurrentLevel(5)} />;
-  }
-  if (currentLevel === 5) {
-    return <Level4Quiz onComplete={score => handleLevelComplete('level4', score)} />;
-  }
-
-  // After all 4 levels
-  if (currentLevel === 6) {
-    const total = scores.level1 + scores.level2 + scores.level3 + scores.level4;
-    return (
-      <div className="p-4">
-        <h2 className="text-2xl font-bold mb-4">Assessment Complete!</h2>
-        <ul className="mb-4">
-          <li>Level 1: {scores.level1}/10</li>
-          <li>Level 2: {scores.level2}/10</li>
-          <li>Level 3: {scores.level3}/10</li>
-          <li>Level 4: {scores.level4}/5</li>
-        </ul>
-        <h3 className="text-xl">Total Score: {total}</h3>
-        {/* optionally trigger a “Finish” button here */}
-      </div>
-    );
-  }
-
-  return null;
+          <button
+            onClick={() => setAssessmentResult(null)}
+            className="mt-6 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          >
+            Restart Assessment
+          </button>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default AssessmentFlow;

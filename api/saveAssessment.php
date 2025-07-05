@@ -8,28 +8,51 @@ require_once __DIR__ . '/db_connection.php';
 // Decode incoming JSON
 $input = json_decode(file_get_contents('php://input'), true);
 
-// Validate required fields
-if (
-    !isset($input['user_id'], $input['total_score'], $input['levelScores'], $input['currentLevel'])
-    || !is_array($input['levelScores'])
-) {
+if ($input === null) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Missing required fields.']);
+    echo json_encode(['success' => false, 'error' => 'Invalid JSON input.']);
     exit;
 }
 
-// Sanitize and extract inputs
+// Check required fields individually with detailed errors
+$requiredFields = ['user_id', 'total_score', 'levelScores', 'currentLevel'];
+
+foreach ($requiredFields as $field) {
+    if (!isset($input[$field])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => "Missing required field: $field"]);
+        exit;
+    }
+}
+
+if (!is_array($input['levelScores'])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'levelScores must be an object/array']);
+    exit;
+}
+
+// Validate user_id numeric and >0
 $user_id = intval($input['user_id']);
+if ($user_id <= 0) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Invalid user_id']);
+    exit;
+}
+
 $total_score = intval($input['total_score']);
 $levelScores = $input['levelScores'];
 $currentLevel = trim($input['currentLevel']);
 $timestamp = $input['timestamp'] ?? date('Y-m-d H:i:s');
 
-// Extract individual scores (default to 0 if missing)
-$level1_score = intval($levelScores['level1'] ?? 0);
-$level2_score = intval($levelScores['level2'] ?? 0);
-$level3_score = intval($levelScores['level3'] ?? 0);
-$level4_score = intval($levelScores['level4'] ?? 0);
+// Extract individual scores with numeric checks, default 0 if missing or invalid
+function getLevelScore($levelScores, $key) {
+    return (isset($levelScores[$key]) && is_numeric($levelScores[$key])) ? intval($levelScores[$key]) : 0;
+}
+
+$level1_score = getLevelScore($levelScores, 'level1');
+$level2_score = getLevelScore($levelScores, 'level2');
+$level3_score = getLevelScore($levelScores, 'level3');
+$level4_score = getLevelScore($levelScores, 'level4');
 
 // Define level max points
 $maxPerLevel = [

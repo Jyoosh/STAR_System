@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Confetti from 'react-confetti';
+import { toast } from 'react-toastify';
+
 
 const aliases = {
   A: ['ay', 'a'], B: ['bee', 'be'], C: ['see', 'sea'], D: ['dee', 'd'], E: ['ee', 'e'],
@@ -10,20 +12,34 @@ const aliases = {
   Y: ['why'], Z: ['zee', 'zed']
 };
 
+const getRandomLetters = (count) => {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  for (let i = letters.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [letters[i], letters[j]] = [letters[j], letters[i]];
+  }
+  return letters.slice(0, count);
+};
 
 export default function Level1({ onComplete }) {
-  const totalQuestions = 10;
-  const [letters, setLetters] = useState([]);
+  const [step, setStep] = useState('speech');
+  const [speechLetters, setSpeechLetters] = useState([]);
   const [idx, setIdx] = useState(0);
-  const [status, setStatus] = useState('🔄 Preparing...');
+  const [status, setStatus] = useState('Preparing...');
   const [transcript, setTranscript] = useState('');
   const [listening, setListening] = useState(false);
   const [failCount, setFailCount] = useState(0);
   const [score, setScore] = useState(0);
-  const [completed, setCompleted] = useState(false);
   const [hasAnyMistake, setHasAnyMistake] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [matchPairs, setMatchPairs] = useState([]);
+  const [matched, setMatched] = useState({});
+  const [showRestart, setShowRestart] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualInput, setManualInput] = useState('');
+  const [matchResults, setMatchResults] = useState({});
+
 
   const lettersRef = useRef([]);
   const idxRef = useRef(0);
@@ -33,6 +49,21 @@ export default function Level1({ onComplete }) {
 
   const dingSound = '/assets/audio/sound_effects/ding.mp3';
   const incorrectSound = '/assets/audio/sound_effects/incorrect.mp3';
+
+  useEffect(() => {
+    const letters = getRandomLetters(5);
+    setSpeechLetters(letters);
+    lettersRef.current = letters;
+    const pairs = letters.map(letter => ({
+      upper: letter,
+      lower: letter.toLowerCase(),
+    }));
+    setMatchPairs(pairs.sort(() => Math.random() - 0.5));
+  }, []);
+
+  useEffect(() => {
+    idxRef.current = idx;
+  }, [idx]);
 
   const sampleWord = (letter) => {
     const examples = {
@@ -48,41 +79,70 @@ export default function Level1({ onComplete }) {
 
   const playSound = (src) => {
     const audio = new Audio(src);
-    audio.play().catch((err) => console.warn('Sound error:', err));
+    audio.play().catch(() => {});
   };
 
-  // ✅ KEY FIX in this block:
-  const advance = useCallback(() => {
-    const next = idxRef.current + 1;
-    if (next < lettersRef.current.length) {
-      setIdx(next);
-      setTranscript('');
-      setFailCount(0);
-      setStatus('🎙️ Ready for next letter');
-    } else {
-      setShowConfetti(true);
-      setStatus('🎉 Level complete!');
-      setCompleted(true);
-      const passed = !hasAnyMistake;
-      setTimeout(() => onComplete({ score, passed }), 1500); // ✅ send actual score and pass status
-    }
-  }, [onComplete, hasAnyMistake, score]);
+  const allMatched = matchPairs.every(pair => matched[pair.upper]);
 
+  const nextSpeech = useCallback(() => {
+    if (idxRef.current + 1 < speechLetters.length) {
+      setIdx(idxRef.current + 1);
+      setTranscript('');
+      setManualInput('');
+      setFailCount(0);
+      setStatus('Next letter ready.');
+    } else {
+      setStep('match');
+    }
+  }, [speechLetters.length]);
+
+  useEffect(() => {
+if (allMatched && step === 'match') {
+  const passed = !hasAnyMistake;
+  if (passed) setShowConfetti(true);
+  setStep('done');
+  setTimeout(() => onComplete({ score, passed }), 1500);
+}
+
+  }, [allMatched, step, score, hasAnyMistake, onComplete]);
+
+  const startListening = () => {
+    if (!recognitionRef.current || recognitionRunningRef.current) return;
+    let count = 3;
+    setCountdown(count);
+    setStatus('⏳ Get ready...');
+    countdownRef.current = setInterval(() => {
+      count--;
+      setCountdown(count);
+      if (count <= 0) {
+        clearInterval(countdownRef.current);
+        setCountdown(0);
+        try {
+          recognitionRef.current.start();
+          recognitionRunningRef.current = true;
+          setListening(true);
+          setStatus('🎧 Speak now!');
+        } catch {
+          setStatus('⚠️ Mic error. Try again.');
+        }
+      }
+    }, 1000);
+  };
+
+  const stopListening = () => {
+    if (recognitionRunningRef.current && recognitionRef.current) {
+      recognitionRef.current.abort();
+      recognitionRef.current.stop();
+      recognitionRunningRef.current = false;
+    }
+    setListening(false);
+    setStatus('🛑 Stopped');
+  };
 
   const skipQuestion = () => {
     setHasAnyMistake(true);
-    advance();
+    nextSpeech();
   };
-
-  useEffect(() => {
-    const randomLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').sort(() => 0.5 - Math.random()).slice(0, totalQuestions);
-    setLetters(randomLetters);
-    lettersRef.current = randomLetters;
-  }, []);
-
-  useEffect(() => {
-    idxRef.current = idx;
-  }, [idx]);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -105,154 +165,191 @@ export default function Level1({ onComplete }) {
       setListening(false);
     };
 
-    recognition.onerror = (event) => {
-      setStatus(`⚠️ ${event.error}`);
+    recognition.onerror = () => {
+      setStatus(`⚠️ Error`);
       recognitionRunningRef.current = false;
       setListening(false);
     };
 
     recognition.onresult = (event) => {
-      if (completed) return;
       const raw = event.results[0][0].transcript.trim();
       const heardWords = raw.split(/\s+/);
       const expected = lettersRef.current[idxRef.current];
-
-      // 🔧 SAFE ALIAS HANDLING (handles both array or single string)
-      const aliasList = Array.isArray(aliases[expected])
-        ? aliases[expected]
-        : [aliases[expected]].filter(Boolean);
-
-      const accepted = [expected.toLowerCase(), ...aliasList.map(a => a.toLowerCase())];
-
-
+      const accepted = [expected.toLowerCase(), ...(aliases[expected] || []).map(x => x.toLowerCase())];
 
       setTranscript(raw);
-      setStatus('⏳ Processing...');
-
-      let correctRepetitions = 0;
-      for (const word of heardWords) {
-        if (accepted.includes(word.toLowerCase())) correctRepetitions++;
-      }
-
+      let correct = heardWords.some(word => accepted.includes(word.toLowerCase()));
       setTimeout(() => {
-        if (completed) return;
-
-        if (correctRepetitions >= 1) {
+        if (correct) {
           playSound(dingSound);
-          setStatus(`✅ Correct: "${raw}"`);
           setScore(prev => prev + 1);
-          setTimeout(() => advance(), 1000);
+          nextSpeech();
         } else {
           const tries = failCount + 1;
           setFailCount(tries);
           playSound(incorrectSound);
           setHasAnyMistake(true);
-
           if (tries >= 3) {
-            setStatus(`❌ Incorrect 3 times. The letter was "${expected}".`);
-            setTimeout(() => advance(), 3000);
+            setStatus(`❌ Incorrect 3 times. It was "${expected}".`);
+            setTimeout(() => nextSpeech(), 1000);
           } else {
-            setStatus(`❌ Heard "${raw}". Try again (${tries}/3).`);
+            setStatus(`❌ Try again (${tries}/3).`);
           }
         }
-      }, 1000);
+      }, 500);
     };
 
     recognitionRef.current = recognition;
-    setStatus('✅ Ready to start');
-  }, [failCount, advance, completed]);
+    setStatus('Ready to start.');
+  }, [failCount, nextSpeech]);
 
-  const startListening = () => {
-    if (!recognitionRef.current || recognitionRunningRef.current) return;
-
-    let count = 3;
-    setCountdown(count);
-    setStatus('⏳ Get ready...');
-    countdownRef.current = setInterval(() => {
-      count--;
-      setCountdown(count);
-      if (count <= 0) {
-        clearInterval(countdownRef.current);
-        setCountdown(0);
-        try {
-          recognitionRef.current.start();
-          recognitionRunningRef.current = true;
-          setListening(true);
-          setStatus('🎧 Speak now!');
-        } catch (err) {
-          setStatus('⚠️ Mic error. Try again.');
-        }
-      }
-    }, 1000);
-  };
-
-  const stopListening = () => {
-    if (recognitionRunningRef.current && recognitionRef.current) {
-      recognitionRef.current.abort();
-      recognitionRef.current.stop();
-      recognitionRunningRef.current = false;
-    }
-    setListening(false);
-    setStatus('🛑 Stopped');
-  };
+  const restart = () => window.location.reload();
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center px-4 sm:px-6">
-      {showConfetti && <Confetti numberOfPieces={400} recycle={false} gravity={0.4} />}
-      <div className="w-full sm:max-w-lg md:max-w-xl bg-white shadow-xl rounded-lg space-y-4 p-4 sm:p-6 md:p-8 relative">
+      {showConfetti && <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />}
+      <div className="w-full sm:max-w-lg md:max-w-xl bg-white shadow-xl rounded-lg space-y-4 p-4 sm:p-6 md:p-8">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-700">Level 1: Alphabet Recognition</h2>
 
-        {completed ? (
-          <div className="text-center text-lg sm:text-xl text-green-700">
-            ✅ You finished! Your score: <strong>{score}</strong> out of <strong>{letters.length}</strong>.
-          </div>
-        ) : (
+        {step === 'speech' && (
           <>
-            <p className="text-center text-gray-600 text-sm sm:text-base">
-              Letter {idx + 1} of {letters.length}
-            </p>
+            <p className="text-center text-gray-600">Say the letter:</p>
+            <div className="text-6xl font-bold text-center text-indigo-700">{speechLetters[idx]}</div>
+            <p className="text-center text-gray-500">Example: {speechLetters[idx]} as in "{sampleWord(speechLetters[idx])}"</p>
 
-            <div className="text-6xl font-extrabold text-center text-indigo-700">
-              {letters[idx]}
+            <div className="text-sm mt-2 mb-2">
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={manualMode}
+                  onChange={() => setManualMode(prev => !prev)}
+                />
+                For Those with Speech Defect Only
+              </label>
             </div>
 
-            <p className="text-center text-gray-500 text-sm">
-              Say: <strong>{letters[idx]} as in "{sampleWord(letters[idx])}"</strong>
-            </p>
-            <p className="text-center text-xs text-gray-500">You may speak 2 or more times in order for your voice to be recognized.</p>
-
-            <button
-              onClick={startListening}
-              disabled={listening || countdown > 0}
-              className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-            >
-              {countdown > 0 ? `⏳ ${countdown === 0 ? 'Speak now' : countdown}` : (listening ? '🎧 Listening…' : '🎤 Start Listening')}
-            </button>
-
-            {listening && (
-              <button
-                onClick={stopListening}
-                className="w-full py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-              >
-                🛑 Stop
-              </button>
-            )}
-
-            <button
-              onClick={skipQuestion}
-              className="w-full py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
-            >
-              ⏭️ Skip Question
-            </button>
-
-            <pre className="text-xs text-gray-700 whitespace-pre-line mt-2">{status}</pre>
-
-            {transcript && (
-              <div className="text-center mt-2 text-gray-800 text-sm">
-                <span className="font-semibold">You said:</span> {transcript}
+            {!manualMode ? (
+              <>
+                <button onClick={startListening} disabled={listening || countdown > 0} className="w-full py-2 bg-green-600 text-white rounded">
+                  {countdown > 0 ? `⏳ ${countdown}` : (listening ? '🎧 Listening…' : '🎤 Start Listening')}
+                </button>
+                {listening && <button onClick={stopListening} className="w-full py-2 bg-red-500 text-white rounded">🛑 Stop</button>}
+              </>
+            ) : (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={manualInput}
+                  onChange={(e) => setManualInput(e.target.value)}
+                  placeholder="Type the letter"
+                  className="w-full border rounded px-3 py-2"
+                />
+                <button
+                  onClick={() => {
+                    const expected = lettersRef.current[idxRef.current];
+                    const accepted = [expected.toLowerCase(), ...(aliases[expected] || []).map(x => x.toLowerCase())];
+                    if (accepted.includes(manualInput.trim().toLowerCase())) {
+                      playSound(dingSound);
+                      setScore(prev => prev + 1);
+                      nextSpeech();
+                    } else {
+                      playSound(incorrectSound);
+                      setHasAnyMistake(true);
+                      setStatus(`❌ Incorrect. It was "${expected}".`);
+                      setTimeout(() => nextSpeech(), 1000);
+                    }
+                  }}
+                  className="w-full py-2 bg-blue-600 text-white rounded"
+                >
+                  ✅ Submit
+                </button>
               </div>
             )}
+
+            <button onClick={skipQuestion} className="w-full py-2 bg-yellow-500 text-white rounded">⏭️ Skip Question</button>
+
+            <pre className="text-xs text-gray-700 whitespace-pre-line mt-2">{status}</pre>
+            {transcript && !manualMode && <div className="text-center text-gray-800 text-sm">You said: {transcript}</div>}
           </>
+        )}
+
+        {step === 'match' && (
+  <div>
+    <p className="text-center mb-2">Match uppercase with lowercase:</p>
+    <div className="grid grid-cols-2 gap-4 mt-4">
+      {matchPairs.map(pair => (
+        <div key={pair.upper} className="flex justify-between items-center border p-2">
+          <span className="text-xl font-bold text-indigo-700">{pair.upper}</span>
+<select
+  className={`border rounded px-2 py-1 transition
+    ${matchResults[pair.upper] === 'correct' ? 'border-green-500 bg-green-100' : ''}
+    ${matchResults[pair.upper] === 'incorrect' ? 'border-red-500 bg-red-100' : ''}`}
+  value={matched[pair.upper]?.toLowerCase() || ''}
+  onChange={(e) =>
+    setMatched(prev => ({
+      ...prev,
+      [pair.upper]: e.target.value,
+    }))
+  }
+  disabled={step === 'done'}
+>
+            <option value="">Select</option>
+            {matchPairs.map(p => (
+              <option key={p.lower} value={p.lower}>{p.lower}</option>
+            ))}
+          </select>
+          {matchResults[pair.upper] === 'correct' && <span className="ml-2 text-green-600 text-xl">✔️</span>}
+{matchResults[pair.upper] === 'incorrect' && <span className="ml-2 text-red-600 text-xl">❌</span>}
+        </div>
+      ))}
+    </div>
+
+    <button
+onClick={() => {
+  const incomplete = matchPairs.some(pair => !matched[pair.upper]);
+if (incomplete) {
+  toast.warning('Please select all matches before submitting.', {
+    position: 'top-center',
+    autoClose: 3000,
+  });
+  return;
+}
+
+
+  const newResults = {};
+  let correctCount = 0;
+  let tempMistake = false;
+
+  matchPairs.forEach(pair => {
+    const selected = matched[pair.upper]?.toLowerCase();
+    const isCorrect = selected === pair.lower;
+    newResults[pair.upper] = isCorrect ? 'correct' : 'incorrect';
+    if (isCorrect) correctCount++;
+    else tempMistake = true;
+  });
+
+  setMatchResults(newResults);
+  setScore(prev => prev + correctCount);
+  setHasAnyMistake(tempMistake);
+  setStep('done');
+  setShowConfetti(true);
+  setTimeout(() => setShowRestart(true), 1500);
+  setTimeout(() => onComplete({ score: score + correctCount, passed: !tempMistake }), 2500);
+}}
+      className="mt-4 w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+    >
+      ✅ Submit Matches
+    </button>
+  </div>
+)}
+
+
+        {step === 'done' && showRestart && (
+          <div className="text-center mt-4">
+            <p className="text-green-700 text-lg">🎉 Done! Your score: {score}/10</p>
+            <button onClick={restart} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">🔁 Restart</button>
+          </div>
         )}
       </div>
     </div>
