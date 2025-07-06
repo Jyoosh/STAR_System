@@ -23,11 +23,27 @@ const AssessmentFlow = () => {
 <StartAssessmentModal
   onClose={() => console.log('[DEBUG] Modal closed')}
   onComplete={(result) => {
-    setAssessmentResult(result);
-    console.log('[DEBUG] Assessment complete:', result);
+    const normalizeScores = (raw) => {
+      const extract = (x) => (typeof x === 'object' && x !== null ? x.score : x);
+      return {
+        level1: extract(raw.levelScores.level1),
+        level2: extract(raw.levelScores.level2),
+        level3: extract(raw.levelScores.level3),
+        level4: extract(raw.levelScores.level4),
+      };
+    };
+
+    const cleanedResult = {
+      ...result,
+      levelScores: normalizeScores(result)
+    };
+
+    setAssessmentResult(cleanedResult);
+    console.log('[DEBUG] Assessment complete:', cleanedResult);
   }}
   debugAutoPass={debugMode}
 />
+
 
           {!debugUnlocked ? (
             <div className="mt-4">
@@ -68,12 +84,13 @@ const AssessmentFlow = () => {
           <p className="text-lg font-semibold">
             Your Reading Level is <strong>{assessmentResult.levelLabel}</strong>!
           </p>
-          <ul className="my-4 text-left inline-block">
-            <li>Level 1: {assessmentResult.levelScores.level1}/10</li>
-            <li>Level 2: {assessmentResult.levelScores.level2}/10</li>
-            <li>Level 3: {assessmentResult.levelScores.level3}/10</li>
-            <li>Level 4: {assessmentResult.levelScores.level4}/10</li>
-          </ul>
+<ul className="my-4 text-left inline-block">
+  <li>Level 1: {assessmentResult.levelScores.level1?.score ?? assessmentResult.levelScores.level1}/10</li>
+  <li>Level 2: {assessmentResult.levelScores.level2?.score ?? assessmentResult.levelScores.level2}/10</li>
+  <li>Level 3: {assessmentResult.levelScores.level3?.score ?? assessmentResult.levelScores.level3}/10</li>
+  <li>Level 4: {assessmentResult.levelScores.level4?.score ?? assessmentResult.levelScores.level4}/10</li>
+</ul>
+
           <h3 className="text-lg font-semibold">Total Score: {assessmentResult.total}</h3>
 
           <button

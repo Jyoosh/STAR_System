@@ -5,6 +5,8 @@ import { AuthContext } from '../auth/AuthContext';
 import AddStudentModal from '../components/Teacher/AddStudentModal';
 import StudentSummary from '../components/Teacher/StudentSummary';
 import { FaSearch } from 'react-icons/fa';
+import EditStudentModal from '../components/Teacher/EditStudentModal';
+
 
 export default function TeacherPanel() {
   const API = process.env.REACT_APP_API_BASE || '';
@@ -15,6 +17,18 @@ export default function TeacherPanel() {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [nextStudentId, setNextStudentId] = useState('');
+
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const [sortBy, setSortBy] = useState('');
+
+const handleEditStudent = (student) => {
+  console.log('[DEBUG] Edit student:', student); // ← Add this
+  setSelectedStudent(student);
+  setShowEditModal(true);
+};
+
 
   const loadStudents = useCallback(async () => {
     if (!user?.id) {
@@ -101,10 +115,17 @@ export default function TeacherPanel() {
     navigate(`/teacher/students/${student.user_id}/history`);
   };
 
-  const filteredStudents = students.filter((s) =>
-    [s.first_name, s.surname, s.user_id]
-      .some((field) => field?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredStudents = students
+    .filter((s) =>
+      [s.first_name, s.surname, s.user_id]
+        .some((field) => field?.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .sort((a, b) => {
+      if (sortBy === 'age') return (a.age ?? 0) - (b.age ?? 0);
+      if (sortBy === 'grade') return (a.grade_level || '').localeCompare(b.grade_level || '', undefined, { numeric: true });
+      return 0;
+    });
+
 
   return (
     <div className="p-6 container mx-auto">
@@ -132,6 +153,20 @@ export default function TeacherPanel() {
         </div>
       </div>
 
+      <div className="flex items-center gap-4 mb-4">
+        <label className="text-sm font-medium text-gray-700">Sort by:</label>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="p-2 border border-gray-300 rounded"
+        >
+          <option value="">None</option>
+          <option value="age">Age</option>
+          <option value="grade">Grade Level</option>
+        </select>
+      </div>
+
+
       <div className="space-y-4">
         {filteredStudents.length > 0 ? (
           filteredStudents.map((student) => (
@@ -141,6 +176,7 @@ export default function TeacherPanel() {
               onDelete={handleDelete}
               onViewResults={handleShowResults}
               onViewHistory={handleShowHistory}
+              onEdit={handleEditStudent}
             />
           ))
         ) : (
@@ -156,6 +192,14 @@ export default function TeacherPanel() {
             setShowModal(false);
             loadStudents();
           }}
+        />
+      )}
+
+      {showEditModal && selectedStudent && (
+        <EditStudentModal
+          student={selectedStudent}
+          onClose={() => setShowEditModal(false)}
+          onSave={loadStudents}
         />
       )}
     </div>

@@ -30,15 +30,15 @@ export default function Level1({ onComplete }) {
   const [listening, setListening] = useState(false);
   const [failCount, setFailCount] = useState(0);
   const [score, setScore] = useState(0);
-  const [hasAnyMistake, setHasAnyMistake] = useState(false);
+const [hasAnyMistake, setHasAnyMistake] = useState(false); // fix destructuring
   const [countdown, setCountdown] = useState(0);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showConfetti] = useState(false);
   const [matchPairs, setMatchPairs] = useState([]);
   const [matched, setMatched] = useState({});
-  const [showRestart, setShowRestart] = useState(false);
   const [manualMode, setManualMode] = useState(false);
   const [manualInput, setManualInput] = useState('');
-  const [matchResults, setMatchResults] = useState({});
+  const [matchResults] = useState({});
+
 
 
   const lettersRef = useRef([]);
@@ -82,7 +82,7 @@ export default function Level1({ onComplete }) {
     audio.play().catch(() => {});
   };
 
-  const allMatched = matchPairs.every(pair => matched[pair.upper]);
+  // const allMatched = matchPairs.every(pair => matched[pair.upper]);
 
   const nextSpeech = useCallback(() => {
     if (idxRef.current + 1 < speechLetters.length) {
@@ -95,16 +95,6 @@ export default function Level1({ onComplete }) {
       setStep('match');
     }
   }, [speechLetters.length]);
-
-  useEffect(() => {
-if (allMatched && step === 'match') {
-  const passed = !hasAnyMistake;
-  if (passed) setShowConfetti(true);
-  setStep('done');
-  setTimeout(() => onComplete({ score, passed }), 1500);
-}
-
-  }, [allMatched, step, score, hasAnyMistake, onComplete]);
 
   const startListening = () => {
     if (!recognitionRef.current || recognitionRunningRef.current) return;
@@ -203,7 +193,7 @@ if (allMatched && step === 'match') {
     setStatus('Ready to start.');
   }, [failCount, nextSpeech]);
 
-  const restart = () => window.location.reload();
+  // const restart = () => window.location.reload();
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center px-4 sm:px-6">
@@ -332,13 +322,14 @@ if (incomplete) {
     else tempMistake = true;
   });
 
-  setMatchResults(newResults);
-  setScore(prev => prev + correctCount);
-  setHasAnyMistake(tempMistake);
-  setStep('done');
-  setShowConfetti(true);
-  setTimeout(() => setShowRestart(true), 1500);
-  setTimeout(() => onComplete({ score: score + correctCount, passed: !tempMistake }), 2500);
+const finalScore = score + correctCount;
+setScore(finalScore); // properly update score
+setHasAnyMistake(tempMistake);
+setStep('done');
+const passed = !(hasAnyMistake || tempMistake);
+setTimeout(() => onComplete({ score: finalScore, passed }), 2500);
+
+
 }}
       className="mt-4 w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
     >
@@ -346,14 +337,6 @@ if (incomplete) {
     </button>
   </div>
 )}
-
-
-        {step === 'done' && showRestart && (
-          <div className="text-center mt-4">
-            <p className="text-green-700 text-lg">🎉 Done! Your score: {score}/10</p>
-            <button onClick={restart} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">🔁 Restart</button>
-          </div>
-        )}
       </div>
     </div>
   );

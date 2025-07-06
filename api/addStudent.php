@@ -17,6 +17,7 @@ foreach ($required as $field) {
     }
 }
 
+// Sanitize and extract data
 $user_id = $data['user_id'];
 $record_id = $user_id;
 $first_name = trim($data['first_name']);
@@ -25,18 +26,22 @@ $surname = trim($data['surname']);
 $email = trim($data['email']);
 $password = $data['password'];
 $role = $data['role'];
-$teacher_user_id = isset($data['teacher_id']) ? trim($data['teacher_id']) : null;
-$student_id = isset($data['student_id']) ? trim($data['student_id']) : null;
+$teacher_user_id = $data['teacher_id'] ?? null;
+$student_id = $data['student_id'] ?? null;
 $is_reusing_deleted = $data['is_reusing_deleted'] ?? false;
+$gender = $data['gender'] ?? null;
+$birthday = $data['birthday'] ?? null;
+$age = isset($data['age']) ? (int)$data['age'] : null;
+$grade_level = $data['grade_level'] ?? null;
 
-// Validate email
+// Validate email format
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid email format']);
     exit;
 }
 
-// Check for email duplication (excluding deleted)
+// Prevent duplicate active emails
 $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND is_deleted = 0");
 $stmt->execute([$email]);
 if ($stmt->fetch()) {
@@ -45,7 +50,7 @@ if ($stmt->fetch()) {
     exit;
 }
 
-// Handle teacher ID lookup
+// Resolve teacher ID
 $teacher_id = null;
 if ($teacher_user_id && $role === 'Student') {
     $stmt = $pdo->prepare("SELECT id, is_deleted FROM users WHERE user_id = ? AND role = 'Teacher'");
@@ -67,7 +72,7 @@ if ($teacher_user_id && $role === 'Student') {
     $teacher_id = $teacher['id'];
 }
 
-// Reuse deleted user if flagged
+// Restore deleted user if applicable
 if ($is_reusing_deleted) {
     $stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ? AND is_deleted = 1");
     $stmt->execute([$user_id]);
@@ -85,6 +90,10 @@ if ($is_reusing_deleted) {
                     role = ?, 
                     teacher_id = ?, 
                     student_id = ?, 
+                    gender = ?,
+                    birthday = ?,
+                    age = ?,
+                    grade_level = ?,
                     is_deleted = 0, 
                     deleted_at = NULL,
                     updated_at = NOW()
@@ -100,6 +109,10 @@ if ($is_reusing_deleted) {
                 $role,
                 $teacher_id,
                 $student_id,
+                $gender,
+                $birthday,
+                $age,
+                $grade_level,
                 $user_id
             ]);
 
@@ -113,22 +126,27 @@ if ($is_reusing_deleted) {
     }
 }
 
-// Insert new user
+// Create new student
 try {
     $hash = password_hash($password, PASSWORD_DEFAULT);
+
     $stmt = $pdo->prepare("
         INSERT INTO users (
             record_id,
-            user_id, 
-            first_name, 
-            middle_name, 
-            surname, 
-            email, 
-            password_hash, 
-            role, 
-            teacher_id, 
-            student_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            user_id,
+            first_name,
+            middle_name,
+            surname,
+            email,
+            password_hash,
+            role,
+            teacher_id,
+            student_id,
+            gender,
+            birthday,
+            age,
+            grade_level
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
     $stmt->execute([
@@ -141,7 +159,11 @@ try {
         $hash,
         $role,
         $teacher_id,
-        $student_id
+        $student_id,
+        $gender,
+        $birthday,
+        $age,
+        $grade_level
     ]);
 
     echo json_encode(['success' => true, 'user_id' => $user_id]);
@@ -154,4 +176,3 @@ try {
         echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
     }
 }
-?>

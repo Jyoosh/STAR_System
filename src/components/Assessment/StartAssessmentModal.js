@@ -88,15 +88,19 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
   };
 
 
-  const handleLevelComplete = (level, score, passed) => {
+  const handleLevelComplete = (level, scoreInput, passedInput) => {
     const numericLevel = Number(level.replace('level', ''));
+
+    // Normalize the inputs: extract score and passed from object if needed
+const score = Number(scoreInput);
+const passed = passedInput;
+
     const newLevelResult = { score, passed, level: numericLevel };
     setLevelResult(newLevelResult);
-    setLevelResult({ score, passed, level: numericLevel });
+
     // === LEVEL 1 COMPLETE ===
     if (level === 'level1') {
       const updatedScores = {
-        ...scores,
         level1: score,
         level2: 0,
         level3: 0,
@@ -266,9 +270,19 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
       return (
         <div className="text-center space-y-4">
           <h2 className="text-xl font-bold text-green-600">
-            🎉 Level {finalResult?.levelScores.level3 ? 3 : finalResult?.levelScores.level2 ? 2 : 1} Complete!
-
+            🎉 Level {
+              finalResult?.levelScores?.level3 === 10 ||
+                finalResult?.levelScores?.level3?.score === 10
+                ? 3
+                : finalResult?.levelScores?.level2 === 10 ||
+                  finalResult?.levelScores?.level2?.score === 10
+                  ? 2
+                  : 1
+            } Complete!
           </h2>
+
+
+
 
           <p>Total Score: {finalResult.total} out of 40</p>
           <p>Your Reading Level: <strong>{finalResult.levelLabel}</strong></p>
@@ -320,10 +334,11 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
       case 1:
         return (
           <Level1
-            onComplete={(score, passed) => {
+            onComplete={({ score, passed }) => {
               if (passed) setShowConfetti(true);
               handleLevelComplete('level1', score, passed);
             }}
+
 
             onExit={exitAssessment}
             debugAutoPass={debugAutoPass} // ✅ add this line
@@ -383,7 +398,7 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
         );
 
       case 3:
-        return <Level3 onComplete={({ score, passed }) => handleLevelComplete('level3', score, passed)} onExit={exitAssessment} />
+        return <Level3 onComplete={(score, passed) => handleLevelComplete('level3', score, passed)} onExit={exitAssessment} />
       case 'level4Story':
         return (
           <div className="max-h-[80vh] overflow-y-auto">

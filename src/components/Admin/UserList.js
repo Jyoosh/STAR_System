@@ -1,6 +1,8 @@
 // src/components/Admin/UserList.js
 import React, { useState, useMemo } from 'react';
 import { GraduationCap, BookUser, Trash2, RefreshCw } from 'lucide-react';
+import toast from 'react-hot-toast';
+
 
 export default function UserList({
   users = [],
@@ -277,18 +279,28 @@ export default function UserList({
               >
                 Cancel
               </button>
-              <button
-                onClick={() => {
-                  confirmAction.action === 'delete'
-                    ? onDelete(confirmAction.id)
-                    : onRestore(confirmAction.id);
-                  setConfirmAction({ id: null, action: '' });
-                }}
-                className={`px-4 py-2 text-white rounded ${confirmAction.action === 'delete' ? 'bg-red-600' : 'bg-green-600'
-                  }`}
-              >
-                {confirmAction.action === 'delete' ? 'Delete' : 'Restore'}
-              </button>
+<button
+onClick={() => {
+  const user = paged.find(u => u.id === confirmAction.id);
+  if (!user) return;
+
+  if (confirmAction.action === 'delete') {
+    onDelete(user.user_id);
+    toast.success(`User ${user.user_id} deleted.`);
+  } else {
+    onRestore(user.id);
+    toast.success(`User ${user.user_id} restored.`);
+  }
+
+  setConfirmAction({ id: null, action: '' });
+}}
+
+  className={`px-4 py-2 text-white rounded ${
+    confirmAction.action === 'delete' ? 'bg-red-600' : 'bg-green-600'
+  }`}
+>
+  {confirmAction.action === 'delete' ? 'Delete' : 'Restore'}
+</button>
             </div>
           </div>
         </div>

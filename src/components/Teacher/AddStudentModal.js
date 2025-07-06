@@ -5,15 +5,19 @@ import toast from 'react-hot-toast';
 const API = process.env.REACT_APP_API_BASE;
 
 export default function AddStudentModal({ teacherId, onClose }) {
-  const [formData, setFormData] = useState({
-    recordId: '',
-    userId: '',
-    firstName: '',
-    middleName: '',
-    surname: '',
-    email: '',
-    password: '',
-  });
+const [formData, setFormData] = useState({
+  recordId: '',
+  userId: '',
+  firstName: '',
+  middleName: '',
+  surname: '',
+  email: '',
+  password: '',
+  gender: '',
+  birthday: '',
+  age: '',
+  grade_level: '',
+});
   const [showPassword, setShowPassword] = useState(false);
 
   // General error message
@@ -102,16 +106,20 @@ export default function AddStudentModal({ teacherId, onClose }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          user_id: trimmedUserId,
-          first_name: formData.firstName.trim(),
-          middle_name: formData.middleName.trim() || null,
-          surname: formData.surname.trim(),
-          email: formData.email.trim(),
-          password: formData.password,
-          role: 'Student',
-          teacher_id: teacherId,
-        }),
+body: JSON.stringify({
+  user_id: trimmedUserId,
+  first_name: formData.firstName.trim(),
+  middle_name: formData.middleName.trim() || null,
+  surname: formData.surname.trim(),
+  email: formData.email.trim(),
+  password: formData.password,
+  role: 'Student',
+  teacher_id: teacherId,
+  gender: formData.gender,
+  birthday: formData.birthday,
+  age: formData.age,
+  grade_level: formData.grade_level,
+}),
       });
 
       const result = await res.json();
@@ -213,6 +221,51 @@ export default function AddStudentModal({ teacherId, onClose }) {
                 required
               />
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div>
+    <label className="block text-sm font-medium text-gray-700">Gender</label>
+    <select name="gender" value={formData.gender} onChange={handleChange} className="w-full p-2 border" required>
+      <option value="">Select Gender</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700">Birthday</label>
+    <input
+      type="date"
+      name="birthday"
+      value={formData.birthday}
+      onChange={handleChange}
+      className="w-full p-2 border"
+      required
+    />
+  </div>
+</div>
+
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <input
+    type="number"
+    name="age"
+    placeholder="Age"
+    value={formData.age}
+    onChange={handleChange}
+    className="p-2 border"
+    required
+  />
+  <input
+    type="text"
+    name="grade_level"
+    placeholder="Grade Level"
+    value={formData.grade_level}
+    onChange={handleChange}
+    className="p-2 border"
+    required
+  />
+</div>
+
 
             <div>
               <label className="block text-sm font-medium text-gray-700" htmlFor="email">

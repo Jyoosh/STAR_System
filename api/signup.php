@@ -69,24 +69,26 @@ try {
   $passwordHash = password_hash($input['password'], PASSWORD_DEFAULT);
 
   // Insert new user
-  $sql = "INSERT INTO users
-            (user_id, first_name, middle_name, surname,
-             email, password_hash, role, teacher_id, student_id)
-          VALUES
-            (:user_id, :first_name, :middle_name, :surname,
-             :email, :password_hash, :role, :teacher_id, :student_id)";
-  $stmt = $pdo->prepare($sql);
-  $stmt->execute([
-    ':user_id'       => $input['user_id'],
-    ':first_name'    => $input['first_name'],
-    ':middle_name'   => $input['middle_name'] ?? null,
-    ':surname'       => $input['surname'],
-    ':email'         => $input['email'],
-    ':password_hash' => $passwordHash,
-    ':role'          => $input['role'],
-    ':teacher_id'    => $teacherFk,
-    ':student_id'    => $input['student_id'] ?? null,
-  ]);
+$sql = "INSERT INTO users
+          (record_id, user_id, first_name, middle_name, surname,
+           email, password_hash, role, teacher_id, student_id)
+        VALUES
+          (:record_id, :user_id, :first_name, :middle_name, :surname,
+           :email, :password_hash, :role, :teacher_id, :student_id)";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([
+  ':record_id'     => $input['user_id'], // assign user_id as record_id
+  ':user_id'       => $input['user_id'],
+  ':first_name'    => $input['first_name'],
+  ':middle_name'   => $input['middle_name'] ?? null,
+  ':surname'       => $input['surname'],
+  ':email'         => $input['email'],
+  ':password_hash' => $passwordHash,
+  ':role'          => $input['role'],
+  ':teacher_id'    => $teacherFk,
+  ':student_id'    => $input['student_id'] ?? null,
+]);
+
 
   echo json_encode([
     'success'   => true,
