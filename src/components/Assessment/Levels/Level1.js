@@ -65,17 +65,17 @@ export default function Level1({ onComplete }) {
     idxRef.current = idx;
   }, [idx]);
 
-  const sampleWord = (letter) => {
-    const examples = {
-      A: 'Apple', B: 'Ball', C: 'Cat', D: 'Dog', E: 'Elephant',
-      F: 'Fish', G: 'Goat', H: 'Hat', I: 'Igloo', J: 'Jam',
-      K: 'Kite', L: 'Lion', M: 'Monkey', N: 'Nose', O: 'Orange',
-      P: 'Pig', Q: 'Queen', R: 'Rabbit', S: 'Sun', T: 'Tiger',
-      U: 'Umbrella', V: 'Violin', W: 'Whale', X: 'Xylophone',
-      Y: 'Yak', Z: 'Zebra'
-    };
-    return examples[letter] || '';
-  };
+  // const sampleWord = (letter) => {
+  //   const examples = {
+  //     A: 'Apple', B: 'Ball', C: 'Cat', D: 'Dog', E: 'Elephant',
+  //     F: 'Fish', G: 'Goat', H: 'Hat', I: 'Igloo', J: 'Jam',
+  //     K: 'Kite', L: 'Lion', M: 'Monkey', N: 'Nose', O: 'Orange',
+  //     P: 'Pig', Q: 'Queen', R: 'Rabbit', S: 'Sun', T: 'Tiger',
+  //     U: 'Umbrella', V: 'Violin', W: 'Whale', X: 'Xylophone',
+  //     Y: 'Yak', Z: 'Zebra'
+  //   };
+  //   return examples[letter] || '';
+  // };
 
   const playSound = (src) => {
     const audio = new Audio(src);
@@ -213,9 +213,12 @@ if (allMatched && step === 'match') {
 
         {step === 'speech' && (
           <>
-            <p className="text-center text-gray-600">Say the letter:</p>
+            {/* <p className="text-center text-gray-600">Say the letter:</p>
             <div className="text-6xl font-bold text-center text-indigo-700">{speechLetters[idx]}</div>
-            <p className="text-center text-gray-500">Example: {speechLetters[idx]} as in "{sampleWord(speechLetters[idx])}"</p>
+            <p className="text-center text-gray-500">Example: {speechLetters[idx]} as in "{sampleWord(speechLetters[idx])}"</p> */}
+
+<p className="text-center text-gray-600">Say the letter:</p>
+<div className="text-6xl font-bold text-center text-indigo-700">{speechLetters[idx]}</div>
 
             <div className="text-sm mt-2 mb-2">
               <label className="inline-flex items-center">

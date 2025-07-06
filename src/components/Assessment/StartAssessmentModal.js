@@ -9,18 +9,15 @@ import Level4Quiz from './Levels/Level4Quiz';
 import { AuthContext } from '../../auth/AuthContext';
 import { toast } from 'react-toastify';
 
-export default function StartAssessmentModal({ onClose, onComplete, debugAutoPass}) {
+export default function StartAssessmentModal({ onClose, onComplete, debugAutoPass }) {
   const { user } = useContext(AuthContext);
   const [currentLevel, setCurrentLevel] = useState('start');
   const [showConfetti, setShowConfetti] = useState(false);
   const [level1FailedScore, setLevel1FailedScore] = useState(null);
   const [finalResult, setFinalResult] = useState(null);
   const [levelResult, setLevelResult] = useState(null);
-
-
-
-
-
+  // const [hasSaved, setHasSaved] = useState(false);
+  const [hasFinalized, setHasFinalized] = useState(false);
   // const [level2FailedScore, setLevel2FailedScore] = useState(null);
   // const [level3FailedScore, setLevel3FailedScore] = useState(null);
   const [scores, setScores] = useState({
@@ -38,191 +35,191 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
   const handleTryTrial = () => setCurrentLevel(0);
 
   const saveAssessment = async ({ scores, total, currentLevel }) => {
-  // ✅ Ensure no nulls
-  const safeScores = {
-    level1: Number(scores.level1) || 0,
-    level2: Number(scores.level2) || 0,
-    level3: Number(scores.level3) || 0,
-    level4: Number(scores.level4) || 0,
+    // ✅ Ensure no nulls
+    const safeScores = {
+      level1: Number(scores.level1) || 0,
+      level2: Number(scores.level2) || 0,
+      level3: Number(scores.level3) || 0,
+      level4: Number(scores.level4) || 0,
+    };
+
+    const totalScore = Number(total) || 0;
+
+    const maxScore = 40;
+    const accuracy = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+
+    let readingLabel = 'Level 1';
+    if (accuracy >= 90) readingLabel = 'Level 4';
+    else if (accuracy >= 75) readingLabel = 'Level 3';
+    else if (accuracy >= 50) readingLabel = 'Level 2';
+
+    const payload = {
+      user_id: user?.id,
+      total_score: totalScore,
+      currentLevel,
+      levelScores: safeScores,
+      readingLabel,
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      console.log("📤 Submitting to API:", JSON.stringify(payload, null, 2));
+
+      const res = await fetch(`${API_BASE}/saveAssessment.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+
+      if (!json.success) {
+        toast.error(json.error || 'Failed to save assessment.');
+      } else {
+        console.log('Saved assessment:', json);
+      }
+
+      return readingLabel;
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Network error: unable to save assessment.');
+      return readingLabel;
+    }
   };
 
-  const totalScore = Number(total) || 0;
 
-  const maxScore = 40;
-  const accuracy = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+  const handleLevelComplete = (level, score, passed) => {
+    const numericLevel = Number(level.replace('level', ''));
+    const newLevelResult = { score, passed, level: numericLevel };
+    setLevelResult(newLevelResult);
+    setLevelResult({ score, passed, level: numericLevel });
+    // === LEVEL 1 COMPLETE ===
+    if (level === 'level1') {
+      const updatedScores = {
+        ...scores,
+        level1: score,
+        level2: 0,
+        level3: 0,
+        level4: 0,
+      };
 
-  let readingLabel = 'Emerging Reader';
-  if (accuracy >= 90) readingLabel = 'Fluent Reader';
-  else if (accuracy >= 75) readingLabel = 'Transitional Reader';
-  else if (accuracy >= 50) readingLabel = 'Developing Reader';
+      const total = score;
 
-  const payload = {
-    user_id: user?.id,
-    total_score: totalScore,
-    currentLevel,
-    levelScores: safeScores,
-    readingLabel,
-    timestamp: new Date().toISOString(),
-  };
+      setScores(updatedScores); // ✅ Store level1 score in state
 
-  try {
-    console.log("📤 Submitting to API:", JSON.stringify(payload, null, 2));
+      saveAssessment({
+        scores: updatedScores,
+        total,
+        currentLevel: passed ? 'Level 2' : 'Level 1',
+      });
 
-    const res = await fetch(`${API_BASE}/saveAssessment.php`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+      if (!passed) {
+        setLevel1FailedScore(score);
+        setCurrentLevel('level1Failed');
+      } else {
+        setCurrentLevel('levelPassed');
+      }
 
-    const json = await res.json();
-
-    if (!json.success) {
-      toast.error(json.error || 'Failed to save assessment.');
-    } else {
-      console.log('Saved assessment:', json);
+      return;
     }
 
-    return readingLabel;
-  } catch (error) {
-    console.error('Save error:', error);
-    toast.error('Network error: unable to save assessment.');
-    return readingLabel;
-  }
-};
 
 
-const handleLevelComplete = (level, score, passed) => {
-  const numericLevel = Number(level.replace('level', ''));
-  const newLevelResult = { score, passed, level: numericLevel };
-  setLevelResult(newLevelResult);
-setLevelResult({ score, passed, level: numericLevel });
-  // === LEVEL 1 COMPLETE ===
-  if (level === 'level1') {
-  const updatedScores = {
-    ...scores,
-    level1: score,
-    level2: 0,
-    level3: 0,
-    level4: 0,
-  };
+    // === LEVEL 2 COMPLETE ===
+    if (level === 'level2') {
+      // Build the new scores object
+      const updatedScores = {
+        ...scores,
+        level2: score,
+        level3: 0,
+        level4: 0,
+      };
 
-  const total = score;
+      const total = updatedScores.level1 + updatedScores.level2;
 
-  setScores(updatedScores); // ✅ Store level1 score in state
+      // 1) Remember which level just passed
+      setLevelResult({ score, passed, level: 2 });
 
-  saveAssessment({
-    scores: updatedScores,
-    total,
-    currentLevel: passed ? 'Level 2' : 'Level 1',
-  });
+      // 2) Update scores state
+      setScores(updatedScores);
 
-  if (!passed) {
-    setLevel1FailedScore(score);
-    setCurrentLevel('level1Failed');
-  } else {
-    setCurrentLevel('levelPassed');
-  }
-
-  return;
-}
-
-
-
-  // === LEVEL 2 COMPLETE ===
-if (level === 'level2') {
-  // Build the new scores object
-  const updatedScores = {
-    ...scores,
-    level2: score,
-    level3: 0,
-    level4: 0,
-  };
-
-  const total = updatedScores.level1 + updatedScores.level2;
-
-  // 1) Remember which level just passed
-  setLevelResult({ score, passed, level: 2 });
-
-  // 2) Update scores state
-  setScores(updatedScores);
-
-  // 3) Persist to backend using the correct, updatedScores
-  saveAssessment({
-    scores: updatedScores,
-    total,
-    currentLevel: passed ? 'Level 3' : 'Level 2',
-  });
-
-  // 4) Switch modal
-  if (!passed) {
-    setCurrentLevel('level2Failed');
-  } 
- else {
-    setCurrentLevel('levelPassed');
-  }
-
-  return;
-}
-
-  // === LEVEL 3 COMPLETE ===
-  if (level === 'level3') {
-    const newScores = {
-      ...scores,
-      level3: score,
-      level4: 0,
-    };
-    const total = newScores.level1 + newScores.level2 + newScores.level3;
-
-    saveAssessment({
-      scores: newScores,
-      total,
-      currentLevel: passed ? 'Level 4' : 'Level 3',
-    });
-
-if (!passed) {
-  setCurrentLevel('level3Failed');
-} else {
-  setLevelResult({ score, passed, level: 3 });
-  setCurrentLevel('levelPassed');
-}
-  setScores(newScores);
-    return;
-  }
-};
-
-const handleQuizComplete = async (level4RawScore) => {
-  const level4Score = Number(level4RawScore) ? level4RawScore * 2 : 0;
-
-  // Use functional update to ensure updated state is used immediately
-  setScores(prevScores => {
-    const updatedScores = {
-      ...prevScores,
-      level4: level4Score,
-    };
-
-    const total = Object.values(updatedScores).reduce((sum, val) => sum + (Number(val) || 0), 0);
-
-    saveAssessment({
-      scores: updatedScores,
-      total,
-      currentLevel: 'Level 4',
-    }).then(readingLabel => {
-      onComplete({
+      // 3) Persist to backend using the correct, updatedScores
+      saveAssessment({
+        scores: updatedScores,
         total,
-        levelScores: updatedScores,
-        levelLabel: readingLabel,
+        currentLevel: passed ? 'Level 3' : 'Level 2',
       });
 
-      setFinalResult({
-        total,
-        levelScores: updatedScores,
-        levelLabel: readingLabel,
-      });
-    });
+      // 4) Switch modal
+      if (!passed) {
+        setCurrentLevel('level2Failed');
+      }
+      else {
+        setCurrentLevel('levelPassed');
+      }
 
-    return updatedScores; // needed to update internal scores state too
-  });
-};
+      return;
+    }
+
+    // === LEVEL 3 COMPLETE ===
+    if (level === 'level3') {
+      const newScores = {
+        ...scores,
+        level3: score,
+        level4: 0,
+      };
+      const total = newScores.level1 + newScores.level2 + newScores.level3;
+
+      saveAssessment({
+        scores: newScores,
+        total,
+        currentLevel: passed ? 'Level 4' : 'Level 3',
+      });
+
+      if (!passed) {
+        setCurrentLevel('level3Failed');
+      } else {
+        setLevelResult({ score, passed, level: 3 });
+        setCurrentLevel('levelPassed');
+      }
+      setScores(newScores);
+      return;
+    }
+  };
+
+  const handleQuizComplete = async (level4RawScore) => {
+    if (hasFinalized) return; // 🚫 Already processed
+    setHasFinalized(true);    // ✅ Set lock immediately
+
+    const level4Score = Number(level4RawScore) ? level4RawScore * 2 : 0;
+
+    setScores(prevScores => {
+      const updatedScores = {
+        ...prevScores,
+        level4: level4Score,
+      };
+
+      const total = Object.values(updatedScores).reduce((sum, val) => sum + (Number(val) || 0), 0);
+
+      saveAssessment({
+        scores: updatedScores,
+        total,
+        currentLevel: 'Level 4',
+      }).then(readingLabel => {
+        const resultPayload = {
+          total,
+          levelScores: updatedScores,
+          levelLabel: readingLabel,
+        };
+
+        setFinalResult(resultPayload);
+        onComplete(resultPayload); // ✅ One-time only
+      });
+
+      return updatedScores;
+    });
+  };
+
 
 
 
@@ -268,10 +265,10 @@ const handleQuizComplete = async (level4RawScore) => {
     if (finalResult && currentLevel === 'level4Quiz') {
       return (
         <div className="text-center space-y-4">
-<h2 className="text-xl font-bold text-green-600">
-  🎉 Level {finalResult?.levelScores.level3 ? 3 : finalResult?.levelScores.level2 ? 2 : 1} Complete!
+          <h2 className="text-xl font-bold text-green-600">
+            🎉 Level {finalResult?.levelScores.level3 ? 3 : finalResult?.levelScores.level2 ? 2 : 1} Complete!
 
-</h2>
+          </h2>
 
           <p>Total Score: {finalResult.total} out of 40</p>
           <p>Your Reading Level: <strong>{finalResult.levelLabel}</strong></p>
@@ -320,64 +317,70 @@ const handleQuizComplete = async (level4RawScore) => {
         );
       case 0:
         return <TrialReadingTest onComplete={() => setCurrentLevel(1)} onClose={() => setCurrentLevel('start')} />;
-case 1:
-  return (
-    <Level1
-onComplete={(score, passed) => {
-  if (passed) setShowConfetti(true);
-  handleLevelComplete('level1', score, passed);
-}}
+      case 1:
+        return (
+          <Level1
+            onComplete={(score, passed) => {
+              if (passed) setShowConfetti(true);
+              handleLevelComplete('level1', score, passed);
+            }}
 
-      onExit={exitAssessment}
-      debugAutoPass={debugAutoPass} // ✅ add this line
-    />
-  );
+            onExit={exitAssessment}
+            debugAutoPass={debugAutoPass} // ✅ add this line
+          />
+        );
 
-case 'levelPassed':
-  const nextLevel = levelResult?.level + 1;
+      case 'levelPassed':
+        const nextLevel = levelResult?.level + 1;
 
-const shouldSkipToQuiz =
-  scores.level1 === 10 &&
-  scores.level2 === 10 &&
-  scores.level3 === 10;
-
-
-
-    return (
-    <div className="text-center space-y-4">
-      <h2 className="text-xl font-bold text-green-600">
-        🎉 Level {levelResult.level} Complete!
-      </h2>
-      <p>You got a perfect score and can now proceed to the next level.</p>
-      <div className="flex gap-4 mt-6">
-        <button
-          onClick={() =>
-            setCurrentLevel(shouldSkipToQuiz ? 'level4Quiz' : nextLevel === 4 ? 'level4Story' : nextLevel)
-          }
-          className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Proceed to {shouldSkipToQuiz ? 'Final Quiz' : `Level ${nextLevel}`}
-        </button>
-        <button
-          onClick={exitAssessment}
-          className="w-full py-2 bg-red-600 text-white rounded hover:bg-red-700"
-        >
-          Exit
-        </button>
-      </div>
-    </div>
-  );
+        const shouldSkipToQuiz =
+          scores.level1 === 10 &&
+          scores.level2 === 10 &&
+          scores.level3 === 10;
 
 
-case 2:
-  return (
-<Level2
-  onComplete={(score, passed) => handleLevelComplete('level2', score, passed)}
-  onExit={exitAssessment}
-  debugAutoPass={null}
-/>
 
-  );
+        return (
+          <div className="text-center space-y-4">
+            <h2 className="text-xl font-bold text-green-600">
+              🎉 Level {levelResult.level} Complete!
+            </h2>
+            <p>You got a perfect score and can now proceed to the next level.</p>
+            <div className="flex gap-4 mt-6">
+              <button
+                onClick={() => {
+                  if (nextLevel === 4) {
+                    setCurrentLevel('level4Story');
+                  } else {
+                    setCurrentLevel(nextLevel);
+                  }
+                }}
+
+
+                className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Proceed to {shouldSkipToQuiz ? 'Final Quiz' : `Level ${nextLevel}`}
+              </button>
+              <button
+                onClick={exitAssessment}
+                className="w-full py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Exit
+              </button>
+            </div>
+          </div>
+        );
+
+
+      case 2:
+        return (
+          <Level2
+            onComplete={(score, passed) => handleLevelComplete('level2', score, passed)}
+            onExit={exitAssessment}
+            debugAutoPass={null}
+          />
+
+        );
 
       case 3:
         return <Level3 onComplete={({ score, passed }) => handleLevelComplete('level3', score, passed)} onExit={exitAssessment} />
@@ -450,62 +453,62 @@ case 2:
 
   // This is inside your component, after renderContent is defined
 
-return (
-  <div className="w-full">
-    {/* MODAL STYLE LEVELS */}
-    {[
-      'start',
-      'level1Failed',
-      'levelPassed',
-      'level2Failed',
-      'level3Failed',
-      'level4Quiz',
-      'level4Story'
-    ].includes(currentLevel) ? (
-      <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-white to-indigo-200 bg-opacity-70 backdrop-blur-md transition-opacity duration-300"></div>
-        <div className="relative z-10 w-full sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-indigo-100 transition-all duration-300 ease-out max-h-[90vh] overflow-y-auto">
-          <button
-            onClick={exitAssessment}
-            className="absolute top-4 right-4 text-indigo-400 hover:text-indigo-600 transition text-2xl font-bold"
-            aria-label="Close"
-          >
-            ×
-          </button>
-          {renderContent()}
+  return (
+    <div className="w-full">
+      {/* MODAL STYLE LEVELS */}
+      {[
+        'start',
+        'level1Failed',
+        'levelPassed',
+        'level2Failed',
+        'level3Failed',
+        'level4Story'
+      ].includes(currentLevel) ? (
+        // Modal layout
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-white to-indigo-200 bg-opacity-70 backdrop-blur-md transition-opacity duration-300"></div>
+          <div className="relative z-10 w-full sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-indigo-100 transition-all duration-300 ease-out max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={exitAssessment}
+              className="absolute top-4 right-4 text-indigo-400 hover:text-indigo-600 transition text-2xl font-bold"
+              aria-label="Close"
+            >
+              ×
+            </button>
+            {renderContent()}
+          </div>
         </div>
-      </div>
-    ) : (
-      // Non-modal fullscreen render (e.g., interactive levels)
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-white">{renderContent()}</div>
-    )}
+      ) : (
+        // Fullscreen layout
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-white">{renderContent()}</div>
+      )}
 
-{/* DEBUG BUTTONS */}
-{[1, 2, 3].includes(currentLevel) && (
-  <div className="fixed bottom-6 right-6 z-[1000] flex flex-col gap-2 items-end">
-    <button
-      onClick={() => {
-        setShowConfetti(true);
-        setTimeout(() => {
-          // Auto‑pass whatever level we're currently on:
-          handleLevelComplete(`level${currentLevel}`, 10, true);
-        }, 800);
-      }}
-      className="px-4 py-2 bg-purple-700 text-white rounded-lg shadow-lg hover:bg-purple-800 transition"
-    >
-      🧪 Auto‑Pass Level {currentLevel} (Debug)
-    </button>
-  </div>
-)}
+      {/* DEBUG BUTTONS */}
+      {[1, 2, 3].includes(currentLevel) && (
+        <div className="fixed bottom-6 right-6 z-[1000] flex flex-col gap-2 items-end">
+          <button
+            onClick={() => {
+              setShowConfetti(true);
+              setTimeout(() => {
+                // Auto‑pass whatever level we're currently on:
+                handleLevelComplete(`level${currentLevel}`, 10, true);
+              }, 800);
+            }}
+            className="px-4 py-2 bg-purple-700 text-white rounded-lg shadow-lg hover:bg-purple-800 transition"
+          >
+            🧪 Auto‑Pass Level {currentLevel} (Debug)
+          </button>
+        </div>
+      )}
 
 
-    {/* CONFETTI */}
-    {showConfetti && (
-      <div className="fixed inset-0 z-50 pointer-events-none">
-        <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />
-      </div>
-    )}
-  </div>
-);
+      {/* CONFETTI */}
+      {showConfetti && (
+        <div className="fixed inset-0 z-50 pointer-events-none">
+          <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />
+        </div>
+      )}
+    </div>
+  );
 } // end of function component
 

@@ -5,18 +5,16 @@ ini_set('display_errors', 1);
 
 require_once __DIR__ . '/db_connection.php';
 
-// Decode incoming JSON
+// Decode JSON input
 $input = json_decode(file_get_contents('php://input'), true);
-
 if ($input === null) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Invalid JSON input.']);
     exit;
 }
 
-// Check required fields individually with detailed errors
+// Required fields
 $requiredFields = ['user_id', 'total_score', 'levelScores', 'currentLevel'];
-
 foreach ($requiredFields as $field) {
     if (!isset($input[$field])) {
         http_response_code(400);
@@ -27,11 +25,11 @@ foreach ($requiredFields as $field) {
 
 if (!is_array($input['levelScores'])) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'levelScores must be an object/array']);
+    echo json_encode(['success' => false, 'error' => 'levelScores must be an array']);
     exit;
 }
 
-// Validate user_id numeric and >0
+// Sanitize inputs
 $user_id = intval($input['user_id']);
 if ($user_id <= 0) {
     http_response_code(400);
@@ -44,38 +42,37 @@ $levelScores = $input['levelScores'];
 $currentLevel = trim($input['currentLevel']);
 $timestamp = $input['timestamp'] ?? date('Y-m-d H:i:s');
 
-// Extract individual scores with numeric checks, default 0 if missing or invalid
-function getLevelScore($levelScores, $key) {
-    return (isset($levelScores[$key]) && is_numeric($levelScores[$key])) ? intval($levelScores[$key]) : 0;
+// Helper to safely extract level score
+function getScore($scores, $key) {
+    return isset($scores[$key]) && is_numeric($scores[$key]) ? intval($scores[$key]) : 0;
 }
 
-$level1_score = getLevelScore($levelScores, 'level1');
-$level2_score = getLevelScore($levelScores, 'level2');
-$level3_score = getLevelScore($levelScores, 'level3');
-$level4_score = getLevelScore($levelScores, 'level4');
+$level1 = getScore($levelScores, 'level1');
+$level2 = getScore($levelScores, 'level2');
+$level3 = getScore($levelScores, 'level3');
+$level4 = getScore($levelScores, 'level4');
 
-// Define level max points
-$maxPerLevel = [
+// Define level max scores
+$maxScores = [
     'level1' => 10,
     'level2' => 10,
     'level3' => 10,
-    'level4' => 10  // 5 questions × 2 pts
+    'level4' => 10
 ];
 
-// Calculate total max score based on attempted levels
+// Calculate max score based on submitted levels
 $max_score = 0;
-foreach ($maxPerLevel as $level => $max) {
+foreach ($maxScores as $level => $max) {
     if (isset($levelScores[$level]) && is_numeric($levelScores[$level])) {
         $max_score += $max;
     }
 }
 
-// Validate total_score doesn't exceed max_score
 if ($total_score > $max_score) {
     http_response_code(400);
     echo json_encode([
         'success' => false,
-        'error' => "Invalid total score: $total_score exceeds max of $max_score."
+        'error' => "Total score $total_score exceeds max $max_score"
     ]);
     exit;
 }
@@ -83,42 +80,68 @@ if ($total_score > $max_score) {
 // Compute accuracy
 $accuracy = $max_score > 0 ? round(($total_score / $max_score) * 100, 2) : 0.0;
 
-// Determine reading level label
+// Determine reading label
 if (stripos($currentLevel, 'level 1') !== false) {
     $reading_level = 'Level 1';
+} elseif ($accuracy >= 90) {
+    $reading_level = 'Level 4';
+} elseif ($accuracy >= 75) {
+    $reading_level = 'Level 3';
+} elseif ($accuracy >= 50) {
+    $reading_level = 'Level 2';
 } else {
-    if ($accuracy >= 90) {
-        $reading_level = 'Fluent Reader';
-    } elseif ($accuracy >= 75) {
-        $reading_level = 'Transitional Reader';
-    } elseif ($accuracy >= 50) {
-        $reading_level = 'Developing Reader';
-    } else {
-        $reading_level = 'Emerging Reader';
-    }
+    $reading_level = 'Level 1';
 }
 
 $default_passage_id = 1;
 
+// Create fingerprint for deduplication
+$fingerprint = md5(json_encode([
+    $user_id,
+    $total_score,
+    $level1,
+    $level2,
+    $level3,
+    $level4
+]));
+
 try {
+    // Deduplication check (last 10 seconds, same fingerprint)
     $stmt = $pdo->prepare("
-        INSERT INTO assessment_results 
-        (student_id, passage_id, assessed_at, accuracy, reading_level, level, 
-         level1_score, level2_score, level3_score, level4_score, 
-         total_score, max_score)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        SELECT COUNT(*) FROM assessment_results 
+        WHERE student_id = ?
+          AND MD5(CONCAT_WS('-', total_score, level1_score, level2_score, level3_score, level4_score)) = ?
+          AND assessed_at >= NOW() - INTERVAL 10 SECOND
     ");
-    $stmt->execute([
+    $stmt->execute([$user_id, $fingerprint]);
+
+    if ($stmt->fetchColumn() > 0) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'Duplicate submission detected. Try again later.'
+        ]);
+        exit;
+    }
+
+    // Insert valid entry
+    $insert = $pdo->prepare("
+        INSERT INTO assessment_results (
+            student_id, passage_id, assessed_at, accuracy, reading_level, level,
+            level1_score, level2_score, level3_score, level4_score,
+            total_score, max_score
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+    $insert->execute([
         $user_id,
         $default_passage_id,
         $timestamp,
         $accuracy,
         $reading_level,
         $currentLevel,
-        $level1_score,
-        $level2_score,
-        $level3_score,
-        $level4_score,
+        $level1,
+        $level2,
+        $level3,
+        $level4,
         $total_score,
         $max_score
     ]);
@@ -126,10 +149,13 @@ try {
     echo json_encode([
         'success' => true,
         'accuracy' => $accuracy,
-        'max_score' => $max_score,
-        'reading_level' => $reading_level
+        'reading_level' => $reading_level,
+        'max_score' => $max_score
     ]);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Server error: ' . $e->getMessage()
+    ]);
 }

@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../auth/AuthContext';
 import { motion } from 'framer-motion';
-import ReactPlayer from 'react-player';
 import StartAssessmentModal from '../components/Assessment/StartAssessmentModal';
 import UserSummary from '../components/Dashboard/UserSummary';
 import AssessmentHistory from '../components/Dashboard/AssessmentHistory';
@@ -12,10 +11,7 @@ const API_BASE =
 
 export default function StudentDashboard() {
   const { user, refreshUser } = useContext(AuthContext);
-  const audioRef = useRef(null);
-  const introKey = `seenIntro_${user?.id}`;
 
-  const [showIntro, setShowIntro] = useState(false);
   const [showAssessmentModal, setShowAssessmentModal] = useState(false);
   const [history, setHistory] = useState([]);
   const [expandedLogId, setExpandedLogId] = useState(null);
@@ -27,32 +23,13 @@ export default function StudentDashboard() {
 
   const lastDateDisplay = latest?.assessed_at
     ? new Date(latest.assessed_at).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
     : '—';
 
   const currentLevelDisplay = latest?.reading_level || 'Not assessed yet';
-
-
-  // Intro tutorial check
-  useEffect(() => {
-    if (user) {
-      const seen = localStorage.getItem(introKey) === 'true';
-      setShowIntro(!seen);
-    }
-  }, [user, introKey]);
-
-  useEffect(() => {
-    if (showIntro && audioRef.current) audioRef.current.play().catch(() => { });
-  }, [showIntro]);
-
-  const finishIntro = () => {
-    localStorage.setItem(introKey, 'true');
-    setShowIntro(false);
-    audioRef.current?.pause();
-  };
 
   // Fetch history
   useEffect(() => {
@@ -118,60 +95,44 @@ export default function StudentDashboard() {
     }
   };
 
-  const toggleLog = (id) => setExpandedLogId(prev => (prev === id ? null : id));
+  const toggleLog = id => setExpandedLogId(prev => (prev === id ? null : id));
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-4">
-      {showIntro && (
-        <div className="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-4">
-          <div className="w-full max-w-md mb-4">
-            <ReactPlayer url="/assets/intro-character.mp4" playing width="100%" height="auto" onEnded={finishIntro} />
-          </div>
-          <audio ref={audioRef} src="/assets/voice-greeting.mp3" />
-          <button
-            onClick={finishIntro}
-            className="mt-4 px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-          >
-            Skip Intro
-          </button>
-        </div>
-      )}
+    <div className="relative min-h-screen bg-gradient-to-br from-green-50 to-green-100 p-2 sm:p-4">
 
       {showAssessmentModal && (
         <StartAssessmentModal
           onClose={() => setShowAssessmentModal(false)}
-          onComplete={(res) => {
+          onComplete={res => {
             handleAssessmentComplete(res);
             setShowAssessmentModal(false);
           }}
         />
       )}
 
-      {!showIntro && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-lg"
-        >
-          <UserSummary
-            firstName={firstName}
-            role={user?.role}
-            lastDateDisplay={lastDateDisplay}
-            currentLevelDisplay={currentLevelDisplay}
-            onReplayIntro={finishIntro}
-            onStartAssessment={() => setShowAssessmentModal(true)}
-          />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-screen-lg w-full mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-lg"
+      >
+        <UserSummary
+          firstName={firstName}
+          role={user?.role}
+          lastDateDisplay={lastDateDisplay}
+          currentLevelDisplay={currentLevelDisplay}
+          onStartAssessment={() => setShowAssessmentModal(true)}
+        />
 
-          <AssessmentHistory
-            history={history}
-            expandedLogId={expandedLogId}
-            toggleLog={toggleLog}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-          />
-        </motion.div>
-      )}
+        <AssessmentHistory
+          history={history}
+          expandedLogId={expandedLogId}
+          toggleLog={toggleLog}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+        />
+      </motion.div>
     </div>
   );
 }

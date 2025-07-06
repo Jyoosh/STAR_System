@@ -33,6 +33,7 @@ const Level4Quiz = ({ onComplete }) => {
   const [responses, setResponses] = useState(Array(questions.length).fill(''));
   const [score, setScore] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [hasSentResult, setHasSentResult] = useState(false); // guard
 
   const handleChange = (index, value) => {
     const newResponses = [...responses];
@@ -64,18 +65,28 @@ const Level4Quiz = ({ onComplete }) => {
                 transition={{ duration: 0.5 }}
                 className="text-center py-4"
               >
-                <div className={`text-4xl font-bold mb-4 ${score === questions.length ? 'text-green-500' :
-                    score >= questions.length / 2 ? 'text-blue-500' : 'text-amber-500'
-                  }`}>
+                <div className={`text-4xl font-bold mb-4 ${
+                  score === questions.length
+                    ? 'text-green-500'
+                    : score >= questions.length / 2
+                    ? 'text-blue-500'
+                    : 'text-amber-500'
+                }`}>
                   {score}/{questions.length}
                 </div>
                 <p className="text-lg text-gray-700 mb-6">
-                  {score === questions.length ? 'Perfect score! 🎉' :
-                    score >= questions.length / 2 ? 'Good job! 👍' : 'Keep practicing!'}
+                  {score === questions.length
+                    ? 'Perfect score! 🎉'
+                    : score >= questions.length / 2
+                    ? 'Good job! 👍'
+                    : 'Keep practicing!'}
                 </p>
                 <button
-onClick={() => onComplete(score)}
-
+                  onClick={() => {
+                    if (hasSentResult) return;
+                    setHasSentResult(true);
+                    onComplete(score);
+                  }}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                 >
                   See Results
@@ -92,10 +103,11 @@ onClick={() => onComplete(score)}
                       {q.options.map((option, i) => (
                         <label
                           key={i}
-                          className={`flex items-center p-3 rounded-md cursor-pointer transition ${responses[index] === option
+                          className={`flex items-center p-3 rounded-md cursor-pointer transition ${
+                            responses[index] === option
                               ? 'bg-blue-50 border border-blue-200'
                               : 'hover:bg-gray-50'
-                            }`}
+                          }`}
                         >
                           <input
                             type="radio"
@@ -120,10 +132,11 @@ onClick={() => onComplete(score)}
               <button
                 onClick={handleSubmit}
                 disabled={responses.some(response => response === '')}
-                className={`w-full py-3 rounded-lg font-medium transition ${responses.some(response => response === '')
+                className={`w-full py-3 rounded-lg font-medium transition ${
+                  responses.some(response => response === '')
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
+                }`}
               >
                 Submit Answers
               </button>

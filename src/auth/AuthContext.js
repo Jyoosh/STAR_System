@@ -80,13 +80,15 @@ export function AuthProvider({ children }) {
     }
   }, [API_BASE]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        Loading…
-      </div>
-    );
-  }
+if (loading) {
+  return (
+    <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-green-50 to-green-100 text-stargreen-dark">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-stargreen-dark border-opacity-50 mb-4"></div>
+      <p className="text-lg font-semibold">Please Wait...</p>
+    </div>
+  );
+}
+
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>

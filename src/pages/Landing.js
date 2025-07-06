@@ -36,42 +36,45 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 to-green-100 overflow-x-hidden relative">
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 to-stargreen-light overflow-x-hidden">
       {/* Hero Section */}
-      <div className="flex flex-row items-center justify-center w-full max-w-7xl mx-auto px-4 py-16">
+      <div className="flex flex-col lg:flex-row items-center justify-center px-4 sm:px-6 py-10 max-w-screen-xl mx-auto space-y-10 lg:space-y-0 lg:space-x-10">
+        {/* Left Lottie (Desktop only) */}
         <div className="hidden lg:block w-1/4">
           <Lottie animationData={welcomeAnimation} loop />
         </div>
 
-        <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-lg text-center mx-4">
-          <StarLogo className="w-24 h-24 mx-auto mb-4" />
-          <h1 className="text-4xl font-extrabold text-gray-800 mb-3 tracking-tight">
-            Welcome to <span className="text-yellow-400">STAR</span>
+        {/* Main Card */}
+        <div className="w-full max-w-md bg-white p-6 sm:p-8 rounded-2xl shadow-xl text-center">
+          <StarLogo className="w-16 h-16 mx-auto mb-4" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-800 mb-2 leading-snug">
+            Welcome to <span className="text-stargreen-dark">STAR</span>
           </h1>
-          <p className="text-gray-600 mb-8 text-lg">
+          <p className="text-gray-600 text-sm sm:text-base mb-6">
             Systematic Techniques and Approaches in Reading
           </p>
           <Link
             to="/signin"
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition duration-200 shadow-md"
+            className="inline-flex items-center justify-center gap-2 bg-stargreen-medium hover:bg-stargreen-dark text-white font-semibold py-2.5 px-5 rounded-xl text-sm transition-all duration-200 shadow"
           >
-            <FaSignInAlt className="text-lg" /> Sign In
+            <FaSignInAlt className="text-base" /> Sign In
           </Link>
         </div>
 
+        {/* Right Lottie (Desktop only) */}
         <div className="hidden lg:block w-1/4">
           <Lottie animationData={readingAnimation} loop />
         </div>
       </div>
 
-      {/* Info & Carousel Section */}
-      <div className="bg-white py-12 px-6 md:px-20 rounded-t-3xl shadow-inner text-center max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">What is STAR?</h2>
-        <p className="text-gray-600 mb-8 max-w-3xl mx-auto text-base leading-relaxed">
+      {/* Info Section + Carousel */}
+      <div className="bg-white py-10 px-4 sm:px-6 md:px-16 rounded-t-3xl shadow-inner text-center max-w-screen-xl mx-auto">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">What is STAR?</h2>
+        <p className="text-gray-600 mb-6 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
           STAR is a reading assessment tool designed to help students improve their literacy through guided techniques and interactive modules. Teachers can track student progress, while learners gain confidence in their reading journey.
         </p>
 
-        <div className="max-w-4xl mx-auto relative">
+        <div className="max-w-3xl mx-auto relative">
           <Carousel
             showThumbs={false}
             showStatus={false}
@@ -81,13 +84,13 @@ export default function Landing() {
             interval={4000}
             selectedItem={carouselIndex}
             onChange={(index) => setCarouselIndex(index)}
-            className="rounded-xl shadow-md"
+            className="rounded-xl shadow"
           >
             {Array.from({ length: imageCount }, (_, i) => (
               <div
                 key={i}
                 onClick={() => handleOpen(i)}
-                className="cursor-zoom-in relative h-[200px] md:h-[300px] lg:h-[400px] overflow-hidden rounded-xl"
+                className="cursor-zoom-in relative h-[180px] sm:h-[240px] md:h-[300px] overflow-hidden rounded-xl"
               >
                 <img
                   src={`/assets/STAR${i + 1}.jpg`}
@@ -99,17 +102,17 @@ export default function Landing() {
             ))}
           </Carousel>
 
-          {/* Fraction Pagination */}
-          <div className="absolute top-2 right-4 bg-white bg-opacity-70 text-gray-800 text-sm font-semibold px-3 py-1 rounded-full shadow">
+          {/* Pagination Indicator */}
+          <div className="absolute top-2 right-4 bg-white bg-opacity-80 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full shadow">
             {carouselIndex + 1} / {imageCount}
           </div>
         </div>
       </div>
 
-      {/* Fullscreen Modal with Swipe */}
+      {/* Fullscreen Modal */}
       {modalIndex !== null && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
           onClick={handleClose}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
@@ -117,7 +120,7 @@ export default function Landing() {
           <img
             src={`/assets/STAR${modalIndex + 1}.jpg`}
             alt={`Fullscreen STAR${modalIndex + 1}`}
-            className="max-w-full max-h-full rounded-lg shadow-lg transition-all duration-300"
+            className="max-h-full max-w-full object-contain rounded-lg shadow-lg transition-all duration-300"
           />
         </div>
       )}

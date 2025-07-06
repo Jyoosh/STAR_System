@@ -45,24 +45,24 @@ try {
     throw new Exception('Invalid email address');
   }
 
-  // Prepare the foreign-key for teacher_id if needed
+  // Validate supervising teacher ID if role is Student
   $teacherFk = null;
   if ($input['role'] === 'Student' && !empty($input['teacher_id'])) {
-    // teacher_id is passed as user_id, e.g. "TCR-1-1"
+    // teacher_id is passed as numeric `id`, not user_id
     $lookup = $pdo->prepare("
       SELECT id
         FROM users
-       WHERE user_id = :uid
+       WHERE id = :tid
          AND role = 'Teacher'
        LIMIT 1
     ");
-    $lookup->execute([':uid' => $input['teacher_id']]);
+    $lookup->execute([':tid' => $input['teacher_id']]);
     $row = $lookup->fetch();
     if (!$row) {
       http_response_code(422);
       throw new Exception('Invalid supervising teacher ID');
     }
-    $teacherFk = (int)$row['id'];
+    $teacherFk = (int) $input['teacher_id'];
   }
 
   // Hash password

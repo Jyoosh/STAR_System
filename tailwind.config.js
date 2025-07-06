@@ -8,6 +8,14 @@ module.exports = {
       fontFamily: {
         'trebuchet': ['"Trebuchet MS"', 'ui-sans-serif', 'system-ui'],
       },
+      colors: {
+        stargreen: {
+          dark: '#295A12',       // Deep Green
+          medium: '#398908',     // Olive/Leaf Green
+          light: '#87DC3F',      // Lime/Spring Green
+          neon: '#C6E90E',       // Chartreuse/Neon Yellow-Green
+        },
+      },
       animation: {
         shake: 'shake 0.4s ease-in-out',
         bounceIn: 'bounceIn 0.8s ease',

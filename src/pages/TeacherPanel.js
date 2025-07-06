@@ -1,77 +1,157 @@
-// src/pages/TeacherPanel.js
-import toast from 'react-hot-toast';
 import React, { useEffect, useState, useContext, useCallback } from 'react';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../auth/AuthContext';
-import AssignedStudents from '../components/Teacher/AssignedStudents';
 import AddStudentModal from '../components/Teacher/AddStudentModal';
-
+import StudentSummary from '../components/Teacher/StudentSummary';
+import { FaSearch } from 'react-icons/fa';
 
 export default function TeacherPanel() {
-  const { user, logout } = useContext(AuthContext);
+  const API = process.env.REACT_APP_API_BASE || '';
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
   const [students, setStudents] = useState([]);
   const [showModal, setShowModal] = useState(false);
-
-  // Optional: Debug or future admin logging
-  // console.log("Logged in teacher:", user);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [nextStudentId, setNextStudentId] = useState('');
 
   const loadStudents = useCallback(async () => {
+    if (!user?.id) {
+      setStudents([]);
+      return;
+    }
+
     try {
-      const res = await fetch(`/api/getStudents.php?teacher_id=${user.id}`);
-      const data = await res.json();
-      setStudents(data);
+      const res = await fetch(
+        `${API}/getStudents.php?teacher_id=${encodeURIComponent(user.id)}`,
+        { credentials: 'include' }
+      );
+      const text = await res.text();
+      console.log('Raw response from getStudents.php:', text);
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) {
+        const uniqueStudents = Array.from(
+          new Map(data.map((s) => [s.record_id, s])).values()
+        );
+        setStudents(uniqueStudents);
+      } else {
+        console.error('Invalid data format from getStudents.php', data);
+        setStudents([]);
+      }
     } catch (err) {
       console.error('Failed to fetch students:', err);
+      setStudents([]);
+      toast.error('Failed to load students.');
     }
-  }, [user.id]);
+  }, [API, user?.id]);
 
   useEffect(() => {
     loadStudents();
+    const interval = setInterval(() => loadStudents(), 30000);
+    return () => clearInterval(interval);
   }, [loadStudents]);
 
-const handleDelete = async (id) => {
-  if (!window.confirm('Delete this student?')) return;
-
-  try {
-    const res = await fetch('/api/deleteUser.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: id })
-    });
-
-    if (res.ok) {
-      toast.success('Student deleted successfully!');
-      loadStudents();
-    } else {
-      toast.error('Failed to delete student. Please try again.');
+  const fetchNextStudentId = async () => {
+    try {
+      const res = await fetch(`${API}/getNextUserId.php`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const text = await res.text();
+      const data = JSON.parse(text);
+      if (res.ok && data.Student) {
+        setNextStudentId(data.Student);
+        setShowModal(true);
+      } else {
+        throw new Error(data.error || 'Invalid student ID response');
+      }
+    } catch (err) {
+      console.error('Failed to fetch next student ID:', err.message);
+      toast.error('Error fetching next student ID.');
     }
-  } catch (err) {
-    toast.error('An error occurred while deleting the student.');
-    console.error('Failed to delete student:', err);
-  }
-};
+  };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this student?')) return;
+    try {
+      const res = await fetch(`${API}/deleteUser.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ user_id: id }),
+      });
+      if (res.ok) {
+        toast.success('Student deleted successfully!');
+        loadStudents();
+      } else {
+        toast.error('Failed to delete student. Please try again.');
+      }
+    } catch (err) {
+      console.error('Failed to delete student:', err);
+      toast.error('An error occurred while deleting the student.');
+    }
+  };
+
+  const handleShowResults = (student) => {
+    navigate(`/teacher/students/${student.user_id}/results`);
+  };
+
+  const handleShowHistory = (student) => {
+    navigate(`/teacher/students/${student.user_id}/history`);
+  };
+
+  const filteredStudents = students.filter((s) =>
+    [s.first_name, s.surname, s.user_id]
+      .some((field) => field?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
     <div className="p-6 container mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Teacher Dashboard</h2>
-        <button onClick={logout} className="bg-red-500 text-white px-4 py-2 rounded">
-          Logout
-        </button>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-[#295A12]">Teacher Dashboard</h2>
       </div>
 
-      <button
-        onClick={() => setShowModal(true)}
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-      >
-        Add Student
-      </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <button
+          onClick={fetchNextStudentId}
+          className="bg-[#295A12] hover:bg-[#398908] text-white px-4 py-2 rounded w-full sm:w-auto transition"
+        >
+          Add Student
+        </button>
 
-      <AssignedStudents students={students} onDelete={handleDelete} />
+        <div className="relative w-full sm:w-72">
+          <input
+            type="text"
+            placeholder="Search students..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-2 border border-[#87DC3F] rounded pl-10 focus:outline-none focus:ring-2 focus:ring-[#C6E90E]"
+          />
+          <FaSearch className="absolute left-3 top-3 text-[#398908]" />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {filteredStudents.length > 0 ? (
+          filteredStudents.map((student) => (
+            <StudentSummary
+              key={student.record_id}
+              student={student}
+              onDelete={handleDelete}
+              onViewResults={handleShowResults}
+              onViewHistory={handleShowHistory}
+            />
+          ))
+        ) : (
+          <p className="text-gray-600 text-center mt-8">No students found.</p>
+        )}
+      </div>
 
       {showModal && (
         <AddStudentModal
           teacherId={user.id}
+          nextStudentId={nextStudentId}
           onClose={() => {
             setShowModal(false);
             loadStudents();

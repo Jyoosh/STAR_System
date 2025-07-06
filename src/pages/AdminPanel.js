@@ -17,7 +17,6 @@ export default function AdminPanel() {
 
   const adminName = user ? `${user.first_name || ''} ${user.surname || ''}`.trim() || 'Admin' : 'Admin';
 
-  // Load users and counts
   useEffect(() => {
     const load = async () => {
       try {
@@ -106,21 +105,25 @@ export default function AdminPanel() {
     <div className="p-4 sm:p-6 container mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold">Admin Dashboard</h2>
-        <p className="text-lg text-gray-600 mt-1">
-          Welcome back, <span className="font-semibold text-indigo-600">{adminName}</span>!
+        <h2 className="text-2xl font-bold text-[#295A12]">Admin Dashboard</h2>
+        <p className="text-lg text-[#398908] mt-1">
+          Welcome back, <span className="font-semibold text-[#295A12]">{adminName}</span>!
         </p>
       </div>
 
       {/* Stats and Add */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
         <div className="flex gap-4">
-          <div className="bg-gray-100 px-3 py-2 rounded">Teachers: {counts.Teacher}</div>
-          <div className="bg-gray-100 px-3 py-2 rounded">Students: {counts.Student}</div>
+          <div className="bg-[#C6E90E]/20 px-3 py-2 rounded text-[#295A12] font-semibold">
+            Teachers: {counts.Teacher}
+          </div>
+          <div className="bg-[#C6E90E]/20 px-3 py-2 rounded text-[#295A12] font-semibold">
+            Students: {counts.Student}
+          </div>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="ml-auto bg-blue-500 text-white px-4 py-2 rounded w-full sm:w-auto"
+          className="ml-auto bg-[#295A12] hover:bg-[#398908] text-white px-4 py-2 rounded w-full sm:w-auto transition"
         >
           Add User
         </button>
@@ -133,12 +136,12 @@ export default function AdminPanel() {
           placeholder="Search by name, User ID, or Teacher ID"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="p-2 border rounded flex-1 w-full"
+          className="p-2 border border-[#87DC3F] rounded flex-1 w-full focus:outline-none focus:ring-2 focus:ring-[#C6E90E]"
         />
         <select
           value={roleFilter}
           onChange={e => setRoleFilter(e.target.value)}
-          className="p-2 border rounded w-full sm:w-40"
+          className="p-2 border border-[#87DC3F] rounded w-full sm:w-40 focus:outline-none focus:ring-2 focus:ring-[#C6E90E]"
         >
           <option value="">All Roles</option>
           <option value="Teacher">Teacher</option>
@@ -146,7 +149,7 @@ export default function AdminPanel() {
         </select>
         <button
           onClick={exportCSV}
-          className="bg-green-500 text-white px-4 py-2 rounded w-full sm:w-auto"
+          className="bg-[#87DC3F] hover:bg-[#C6E90E] text-[#295A12] px-4 py-2 rounded w-full sm:w-auto font-semibold transition"
         >
           Export CSV
         </button>
