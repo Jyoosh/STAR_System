@@ -32,7 +32,7 @@ try {
 
   // Decode payload
   $input = json_decode(file_get_contents('php://input'), true);
-  foreach (['user_id','first_name','surname','email','password','role'] as $f) {
+  foreach (['user_id','first_name','surname','password','role'] as $f) {
     if (empty($input[$f])) {
       http_response_code(400);
       throw new Exception("Missing required field: $f");
@@ -40,10 +40,10 @@ try {
   }
 
   // Validate email
-  if (! filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
-    http_response_code(422);
-    throw new Exception('Invalid email address');
-  }
+  // if (! filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
+  //   http_response_code(422);
+  //   throw new Exception('Invalid email address');
+  // }
 
   // Validate supervising teacher ID if role is Student
   $teacherFk = null;
@@ -69,15 +69,18 @@ try {
   $passwordHash = password_hash($input['password'], PASSWORD_DEFAULT);
 
   // Insert new user
+// Insert new user
 $sql = "INSERT INTO users
           (record_id, user_id, first_name, middle_name, surname,
-           email, password_hash, role, teacher_id, student_id)
+           email, password_hash, role, teacher_id, student_id,
+           gender, birthday, age, grade_level)
         VALUES
           (:record_id, :user_id, :first_name, :middle_name, :surname,
-           :email, :password_hash, :role, :teacher_id, :student_id)";
+           :email, :password_hash, :role, :teacher_id, :student_id,
+           :gender, :birthday, :age, :grade_level)";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([
-  ':record_id'     => $input['user_id'], // assign user_id as record_id
+  ':record_id'     => $input['user_id'],
   ':user_id'       => $input['user_id'],
   ':first_name'    => $input['first_name'],
   ':middle_name'   => $input['middle_name'] ?? null,
@@ -87,7 +90,12 @@ $stmt->execute([
   ':role'          => $input['role'],
   ':teacher_id'    => $teacherFk,
   ':student_id'    => $input['student_id'] ?? null,
+  ':gender'        => $input['gender'] ?? null,
+  ':birthday'      => $input['birthday'] ?? null,
+  ':age'           => $input['age'] ?? null,
+  ':grade_level'   => $input['grade_level'] ?? null,
 ]);
+
 
 
   echo json_encode([

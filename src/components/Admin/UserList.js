@@ -127,7 +127,7 @@ export default function UserList({
                   {sortBy.key === 'surname' && <span className="ml-1">{sortBy.asc ? '↑' : '↓'}</span>}
                 </div>
               </th>
-              <th
+              {/* <th
                 className="p-2 border cursor-pointer"
                 onClick={() => setSortBy(s => ({ key: 'email', asc: s.key === 'email' ? !s.asc : true }))}
               >
@@ -135,7 +135,7 @@ export default function UserList({
                   Email
                   {sortBy.key === 'email' && <span className="ml-1">{sortBy.asc ? '↑' : '↓'}</span>}
                 </div>
-              </th>
+              </th> */}
               <th className="p-2 border">Actions</th>
             </tr>
           </thead>
@@ -162,7 +162,7 @@ export default function UserList({
                 <td className="p-2">
                   {u.first_name} {u.middle_name ? `${u.middle_name} ` : ''}{u.surname}
                 </td>
-                <td className="p-2">{u.email}</td>
+                {/* <td className="p-2">{u.email}</td> */}
                 <td className="p-2 space-x-2">
                   {activeTab === 'active' ? (
                     <button
@@ -232,7 +232,7 @@ export default function UserList({
                 )}
               </div>
             </div>
-            <p className="text-sm"><strong>Email:</strong> {u.email}</p>
+            {/* <p className="text-sm"><strong>Email:</strong> {u.email}</p> */}
           </div>
         ))}
       </div>

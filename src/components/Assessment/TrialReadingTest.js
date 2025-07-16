@@ -195,7 +195,7 @@ export default function TrialReadingTest({ onClose }) {
             <p className="text-center text-gray-500 text-sm">Attempt: <strong>{Math.min(failCount + 1, 3)} of 3</strong></p>
 
             <button onClick={startListening} disabled={listening || countdown > 0} className="w-full mt-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-lg">
-              {countdown > 0 ? `⏳ ${countdown}` : (listening ? '🎧 Listening…' : '🎤 Start Listening')}
+              {countdown > 0 ? `⏳ ${countdown}` : (listening ? '🎧 Listening…' : '🎤 Start Speaking')}
             </button>
             {listening && <button onClick={stopListening} className="w-full mt-2 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition text-lg">🛑 Stop</button>}
             {!hasPlayed && <button onClick={() => speakLetter()} className="w-full mt-2 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition text-lg">🔊 Hear How to Say It</button>}

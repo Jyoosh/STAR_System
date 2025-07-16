@@ -14,7 +14,7 @@ export default function AddUserModal({
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [surname, setSurname] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, ] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [teacherId, setTeacherId] = useState('');
@@ -168,7 +168,7 @@ export default function AddUserModal({
             </div>
 
             {/* Email */}
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700">
                 Email Address
               </label>
@@ -183,7 +183,7 @@ export default function AddUserModal({
               <p className="text-xs text-gray-500 mt-1">
                 If no personal email is available, enter the teacher's email here.
               </p>
-            </div>
+            </div> */}
 
             {/* Password */}
             <div>

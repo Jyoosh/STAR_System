@@ -1,4 +1,6 @@
 import React, { useState, useContext } from 'react';
+import ChooseAssessmentTypeModal from './ChooseAssessmentTypeModal';
+import SpeechDefectAssessment from './SpeechDefectAssessment';
 import Confetti from 'react-confetti';
 import TrialReadingTest from './TrialReadingTest';
 import Level1 from './Levels/Level1';
@@ -9,17 +11,16 @@ import Level4Quiz from './Levels/Level4Quiz';
 import { AuthContext } from '../../auth/AuthContext';
 import { toast } from 'react-toastify';
 
-export default function StartAssessmentModal({ onClose, onComplete, debugAutoPass }) {
+export default function StartAssessmentModal({ onClose, onComplete, debugAutoPass, onSaveComplete }) {
   const { user } = useContext(AuthContext);
+  const [showTypeModal, setShowTypeModal] = useState(false);
   const [currentLevel, setCurrentLevel] = useState('start');
   const [showConfetti, setShowConfetti] = useState(false);
   const [level1FailedScore, setLevel1FailedScore] = useState(null);
   const [finalResult, setFinalResult] = useState(null);
   const [levelResult, setLevelResult] = useState(null);
-  // const [hasSaved, setHasSaved] = useState(false);
+  const [debugUnlocked, setDebugUnlocked] = useState(false);
   const [hasFinalized, setHasFinalized] = useState(false);
-  // const [level2FailedScore, setLevel2FailedScore] = useState(null);
-  // const [level3FailedScore, setLevel3FailedScore] = useState(null);
   const [scores, setScores] = useState({
     level1: 0,
     level2: 0,
@@ -31,238 +32,223 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
     process.env.REACT_APP_API_BASE?.replace(/\/+$/, '') ||
     `${window.location.origin}/star-app/api`;
 
-  const handleStartAssessment = () => setCurrentLevel(1);
+  const handleStartAssessment = () => {
+    console.log("[DEBUG] Take Assessment clicked");
+    setShowTypeModal(true);
+  };
+
   const handleTryTrial = () => setCurrentLevel(0);
 
-  const saveAssessment = async ({ scores, total, currentLevel }) => {
-    // ✅ Ensure no nulls
-    const safeScores = {
+  const saveAssessment = async ({
+    scores,
+    total,
+    currentLevel,
+    assessmentType = 'Without Speech Defect',
+    reading_level = null,
+  }) => {
+    const user_id = user?.user_id || user?.id;
+    if (!user_id) {
+      toast.error('Missing user ID. Cannot save assessment.');
+      return null;
+    }
+
+    const cleanScores = {
       level1: Number(scores.level1) || 0,
       level2: Number(scores.level2) || 0,
       level3: Number(scores.level3) || 0,
       level4: Number(scores.level4) || 0,
     };
 
-    const totalScore = Number(total) || 0;
-
-    const maxScore = 40;
-    const accuracy = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
-
-    let readingLabel = 'Level 1';
-    if (accuracy >= 90) readingLabel = 'Level 4';
-    else if (accuracy >= 75) readingLabel = 'Level 3';
-    else if (accuracy >= 50) readingLabel = 'Level 2';
-
     const payload = {
-      user_id: user?.id,
-      total_score: totalScore,
+      user_id,
+      total_score: total,
       currentLevel,
-      levelScores: safeScores,
-      readingLabel,
+      levelScores: cleanScores,
       timestamp: new Date().toISOString(),
+      assessment_type: assessmentType,
+      reading_level: reading_level || currentLevel, // fallback
     };
 
     try {
-      console.log("📤 Submitting to API:", JSON.stringify(payload, null, 2));
-
-      const res = await fetch(`${API_BASE}/saveAssessment.php`, {
+      const response = await fetch(`${API_BASE}/saveAssessment.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      const json = await res.json();
+      const data = await response.json();
 
-      if (!json.success) {
-        toast.error(json.error || 'Failed to save assessment.');
-      } else {
-        console.log('Saved assessment:', json);
+      if (!data.success) {
+        toast.error(data.error || 'Failed to save assessment.');
+        return null;
       }
 
-      return readingLabel;
-    } catch (error) {
-      console.error('Save error:', error);
+      return data.reading_level || currentLevel;
+    } catch (err) {
       toast.error('Network error: unable to save assessment.');
-      return readingLabel;
+      return null;
     }
   };
 
 
-  const handleLevelComplete = (level, scoreInput, passedInput) => {
-    const numericLevel = Number(level.replace('level', ''));
-
-    // Normalize the inputs: extract score and passed from object if needed
-const score = Number(scoreInput);
-const passed = passedInput;
-
-    const newLevelResult = { score, passed, level: numericLevel };
-    setLevelResult(newLevelResult);
-
-    // === LEVEL 1 COMPLETE ===
-    if (level === 'level1') {
-      const updatedScores = {
-        level1: score,
-        level2: 0,
-        level3: 0,
-        level4: 0,
-      };
-
-      const total = score;
-
-      setScores(updatedScores); // ✅ Store level1 score in state
-
-      saveAssessment({
-        scores: updatedScores,
-        total,
-        currentLevel: passed ? 'Level 2' : 'Level 1',
-      });
-
-      if (!passed) {
-        setLevel1FailedScore(score);
-        setCurrentLevel('level1Failed');
-      } else {
-        setCurrentLevel('levelPassed');
-      }
-
-      return;
-    }
-
-
-
-    // === LEVEL 2 COMPLETE ===
-    if (level === 'level2') {
-      // Build the new scores object
-      const updatedScores = {
-        ...scores,
-        level2: score,
-        level3: 0,
-        level4: 0,
-      };
-
-      const total = updatedScores.level1 + updatedScores.level2;
-
-      // 1) Remember which level just passed
-      setLevelResult({ score, passed, level: 2 });
-
-      // 2) Update scores state
-      setScores(updatedScores);
-
-      // 3) Persist to backend using the correct, updatedScores
-      saveAssessment({
-        scores: updatedScores,
-        total,
-        currentLevel: passed ? 'Level 3' : 'Level 2',
-      });
-
-      // 4) Switch modal
-      if (!passed) {
-        setCurrentLevel('level2Failed');
-      }
-      else {
-        setCurrentLevel('levelPassed');
-      }
-
-      return;
-    }
-
-    // === LEVEL 3 COMPLETE ===
-    if (level === 'level3') {
-      const newScores = {
-        ...scores,
-        level3: score,
-        level4: 0,
-      };
-      const total = newScores.level1 + newScores.level2 + newScores.level3;
-
-      saveAssessment({
-        scores: newScores,
-        total,
-        currentLevel: passed ? 'Level 4' : 'Level 3',
-      });
-
-      if (!passed) {
-        setCurrentLevel('level3Failed');
-      } else {
-        setLevelResult({ score, passed, level: 3 });
-        setCurrentLevel('levelPassed');
-      }
-      setScores(newScores);
-      return;
+  const requestDebugAccess = () => {
+    const input = prompt('Enter debug password:');
+    if (input === '!2E') {
+      setDebugUnlocked(true);
+    } else {
+      alert('Incorrect password');
     }
   };
 
-  const handleQuizComplete = async (level4RawScore) => {
-    if (hasFinalized) return; // 🚫 Already processed
-    setHasFinalized(true);    // ✅ Set lock immediately
 
-    const level4Score = Number(level4RawScore) ? level4RawScore * 2 : 0;
+  const handleLevelComplete = async (level, score, passed) => {
+    const levelNum = Number(level.replace('level', ''));
+    const updated = { ...scores, [`level${levelNum}`]: score };
 
-    setScores(prevScores => {
-      const updatedScores = {
-        ...prevScores,
-        level4: level4Score,
-      };
+    // Reset future levels
+    for (let i = levelNum + 1; i <= 4; i++) updated[`level${i}`] = 0;
 
-      const total = Object.values(updatedScores).reduce((sum, val) => sum + (Number(val) || 0), 0);
+    setScores(updated);
+    setLevelResult({ score, passed, level: levelNum });
 
-      saveAssessment({
-        scores: updatedScores,
+    if (!passed) {
+      const total = Object.values(updated)
+        .slice(0, levelNum)
+        .reduce((sum, s) => sum + s, 0);
+
+      const label = `Level ${levelNum}`;
+
+      await saveAssessment({
+        scores: updated,
         total,
-        currentLevel: 'Level 4',
-      }).then(readingLabel => {
-        const resultPayload = {
-          total,
-          levelScores: updatedScores,
-          levelLabel: readingLabel,
-        };
-
-        setFinalResult(resultPayload);
-        onComplete(resultPayload); // ✅ One-time only
+        currentLevel: label,
+        assessmentType: 'Without Speech Defect',
+        reading_level: label,
       });
 
-      return updatedScores;
+      setHasFinalized(true); // ✅ Add this line
+
+      // ✅ Notify parent to refresh history
+      if (typeof onSaveComplete === 'function') {
+        onSaveComplete();  // 🔁 trigger parent re-fetch
+      }
+
+      if (levelNum === 1) setLevel1FailedScore(score);
+      setCurrentLevel(`level${levelNum}Failed`);
+      return;
+    }
+
+
+    setCurrentLevel('levelPassed');
+  };
+
+
+
+
+  const handleQuizComplete = async (rawScore) => {
+    if (hasFinalized) return;
+
+    // ⛔ Prevent saving if user never reached Level 4
+    if (currentLevel !== 'level4Quiz') return;
+
+    setHasFinalized(true);
+
+    const level4 = rawScore ? rawScore * 2 : 0;
+    const updated = { ...scores, level4 };
+    const total = Object.values(updated).reduce((sum, s) => sum + s, 0);
+
+    const levelLabel = 'Level 4';
+
+    await saveAssessment({
+      scores: updated,
+      total,
+      currentLevel: levelLabel,
+      assessmentType: 'Without Speech Defect',
+      reading_level: levelLabel,
     });
+
+    setHasFinalized(true);
+    if (typeof onSaveComplete === 'function') {
+      onSaveComplete();
+    }
+    const resultPayload = { total, levelScores: updated, levelLabel };
+    setFinalResult(resultPayload);
+    onComplete(resultPayload);
+    setScores(updated);
   };
+
+
+
 
 
 
 
   const returnToStart = () => {
-    if (currentLevel === 'level1Failed') {
-      onComplete({
-        total: scores.level1,
-        levelScores: {
-          level1: scores.level1,
-          level2: 0,
-          level3: 0,
-          level4: 0,
-        },
-        levelLabel: 'Level 1',
-      });
-    }
-    setCurrentLevel('start');
+    // Only call onComplete if you’re actually finalizing results (e.g., failing Level 1)
+    // BUT don't call it here if you're just returning to type selector
+    // Remove onComplete call entirely here
+
+    setFinalResult(null);              // clear any previous final results
+    setLevelResult(null);             // clear level results
+    setCurrentLevel('start');         // resets to main start screen
+    setShowTypeModal(true);           // ✅ open ChooseAssessmentTypeModal
     setLevel1FailedScore(null);
     setShowConfetti(false);
   };
 
-  const exitAssessment = () => {
-    if (currentLevel === 'level1Failed') {
+
+
+  const exitAssessment = async () => {
+    // 🛡️ Prevent double save if already finalized
+    if (hasFinalized) {
+      setCurrentLevel('start');
+      setLevel1FailedScore(null);
+      setShowConfetti(false);
+      onClose();
+      return;
+    }
+
+    let total = 0;
+    const failedLevel = currentLevel; // e.g. 'level2Failed'
+    let levelLabel = 'Level 1';
+
+    if (failedLevel === 'level1Failed') {
+      total = scores.level1;
+      levelLabel = 'Level 1';
+    } else if (failedLevel === 'level2Failed') {
+      total = scores.level1 + scores.level2;
+      levelLabel = 'Level 2';
+    } else if (failedLevel === 'level3Failed') {
+      total = scores.level1 + scores.level2 + scores.level3;
+      levelLabel = 'Level 3';
+    }
+
+    if (['level1Failed', 'level2Failed', 'level3Failed'].includes(failedLevel)) {
+      await saveAssessment({
+        scores,
+        total,
+        currentLevel: levelLabel,
+        assessmentType: 'Without Speech Defect',
+        reading_level: levelLabel, // ✅ ensure reading_level is passed
+      });
+
+      setHasFinalized(true); // ✅ mark as finalized so no future duplicate saves
+
       onComplete({
-        total: scores.level1,
-        levelScores: {
-          level1: scores.level1,
-          level2: 0,
-          level3: 0,
-          level4: 0,
-        },
-        levelLabel: 'Level 1',
+        total,
+        levelScores: scores,
+        levelLabel,
       });
     }
-    onClose();
+
     setCurrentLevel('start');
     setLevel1FailedScore(null);
     setShowConfetti(false);
+    onClose();
   };
+
+
+
 
   const renderContent = () => {
 
@@ -270,19 +256,8 @@ const passed = passedInput;
       return (
         <div className="text-center space-y-4">
           <h2 className="text-xl font-bold text-green-600">
-            🎉 Level {
-              finalResult?.levelScores?.level3 === 10 ||
-                finalResult?.levelScores?.level3?.score === 10
-                ? 3
-                : finalResult?.levelScores?.level2 === 10 ||
-                  finalResult?.levelScores?.level2?.score === 10
-                  ? 2
-                  : 1
-            } Complete!
+            🎉 {finalResult.levelLabel} Complete!
           </h2>
-
-
-
 
           <p>Total Score: {finalResult.total} out of 40</p>
           <p>Your Reading Level: <strong>{finalResult.levelLabel}</strong></p>
@@ -306,6 +281,24 @@ const passed = passedInput;
         </div>
       );
     }
+    if (currentLevel === 'speech_defect_flow') {
+      return (
+        <SpeechDefectAssessment
+          user={user}
+          onExit={exitAssessment}
+          onReturnToStart={() => {
+            setCurrentLevel('start');
+            setShowTypeModal(true);
+          }}
+          onComplete={(result) => {
+            setFinalResult(result);
+            onComplete(result);
+          }}
+        />
+      );
+    }
+
+
 
     if (currentLevel === 'level4Quiz') {
       return <Level4Quiz onComplete={handleQuizComplete} />;
@@ -352,7 +345,6 @@ const passed = passedInput;
           scores.level1 === 10 &&
           scores.level2 === 10 &&
           scores.level3 === 10;
-
 
 
         return (
@@ -464,66 +456,99 @@ const passed = passedInput;
       default:
         return null;
     }
+
+
   };
 
   // This is inside your component, after renderContent is defined
 
+
   return (
     <div className="w-full">
-      {/* MODAL STYLE LEVELS */}
-      {[
-        'start',
-        'level1Failed',
-        'levelPassed',
-        'level2Failed',
-        'level3Failed',
-        'level4Story'
-      ].includes(currentLevel) ? (
-        // Modal layout
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-white to-indigo-200 bg-opacity-70 backdrop-blur-md transition-opacity duration-300"></div>
-          <div className="relative z-10 w-full sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-indigo-100 transition-all duration-300 ease-out max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={exitAssessment}
-              className="absolute top-4 right-4 text-indigo-400 hover:text-indigo-600 transition text-2xl font-bold"
-              aria-label="Close"
-            >
-              ×
-            </button>
-            {renderContent()}
-          </div>
-        </div>
+      {/* === CHOOSE TYPE MODAL === */}
+      {showTypeModal ? (
+        <ChooseAssessmentTypeModal
+          onSelectType={(type) => {
+            setShowTypeModal(false);
+            console.log('✅ Chosen assessment type:', type);
+
+            if (type === 'standard') {
+              setCurrentLevel(1); // Regular assessment
+            } else if (type === 'speech_defect') {
+              setCurrentLevel('speech_defect_flow'); // Speech Defect flow
+            }
+          }}
+          onCancel={() => setShowTypeModal(false)}
+        />
       ) : (
-        // Fullscreen layout
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-white">{renderContent()}</div>
-      )}
+        <>
+          {/* === MODAL STYLE LEVELS === */}
+          {[
+            'start',
+            'level1Failed',
+            'levelPassed',
+            'level2Failed',
+            'level3Failed',
+            'level4Story'
+          ].includes(currentLevel) ? (
+            // Modal layout
+            <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-white to-indigo-200 bg-opacity-70 backdrop-blur-md transition-opacity duration-300"></div>
+              <div className="relative z-10 w-full sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-indigo-100 transition-all duration-300 ease-out max-h-[90vh] overflow-y-auto">
+                <button
+                  onClick={exitAssessment}
+                  className="absolute top-4 right-4 text-indigo-400 hover:text-indigo-600 transition text-2xl font-bold"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+                {renderContent()}
+              </div>
+            </div>
+          ) : (
+            // Fullscreen layout
+            <div className="fixed inset-0 z-50 overflow-y-auto bg-white">
+              {renderContent()}
+            </div>
+          )}
 
-      {/* DEBUG BUTTONS */}
-      {[1, 2, 3].includes(currentLevel) && (
-        <div className="fixed bottom-6 right-6 z-[1000] flex flex-col gap-2 items-end">
-          <button
-            onClick={() => {
-              setShowConfetti(true);
-              setTimeout(() => {
-                // Auto‑pass whatever level we're currently on:
-                handleLevelComplete(`level${currentLevel}`, 10, true);
-              }, 800);
-            }}
-            className="px-4 py-2 bg-purple-700 text-white rounded-lg shadow-lg hover:bg-purple-800 transition"
-          >
-            🧪 Auto‑Pass Level {currentLevel} (Debug)
-          </button>
-        </div>
-      )}
+          {/* === DEBUG BUTTONS === */}
+          {[1, 2, 3].includes(currentLevel) && (
+            <div className="fixed bottom-6 right-6 z-[1000] flex flex-col gap-2 items-end">
+              {!debugUnlocked ? (
+                <button
+                  onClick={requestDebugAccess}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 transition"
+                >
+                  🔒 Unlock Debug
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setShowConfetti(true);
+                    setTimeout(() => {
+                      handleLevelComplete(`level${currentLevel}`, 10, true);
+                    }, 800);
+                  }}
+                  className="px-4 py-2 bg-purple-700 text-white rounded-lg shadow-lg hover:bg-purple-800 transition"
+                >
+                  🧪 Auto‑Pass Level {currentLevel}
+                </button>
+              )}
+            </div>
+          )}
 
 
-      {/* CONFETTI */}
-      {showConfetti && (
-        <div className="fixed inset-0 z-50 pointer-events-none">
-          <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />
-        </div>
+          {/* === CONFETTI === */}
+          {showConfetti && (
+            <div className="fixed inset-0 z-50 pointer-events-none">
+              <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
+
 } // end of function component
 

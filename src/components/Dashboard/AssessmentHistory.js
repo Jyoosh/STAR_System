@@ -1,18 +1,32 @@
 import React from 'react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
-const getReadingLevelBadge = (accuracy) => {
-  if (accuracy >= 90) return { label: 'Level 4', color: 'bg-green-500' };
-  if (accuracy >= 75) return { label: 'Level 3', color: 'bg-yellow-400' };
-  if (accuracy >= 50) return { label: 'Level 2', color: 'bg-orange-400' };
-  return { label: 'Level 1', color: 'bg-red-500' };
+const getReadingLevelBadgeByLabel = (readingLevel) => {
+  switch (readingLevel) {
+    case 'Level 4':
+      return { label: 'Level 4', color: 'bg-blue-400' };
+    case 'Level 3':
+      return { label: 'Level 3', color: 'bg-red-500' };
+    case 'Level 2':
+      return { label: 'Level 2', color: 'bg-yellow-400' };
+    default:
+      return { label: 'Level 1', color: 'bg-green-500' };
+  }
 };
 
 const downloadCSV = (history) => {
   const headers = [
-    'Date', 'Total Score', 'Max Score', 'Accuracy',
-    'Reading Level', 'Level Label',
-    'Level 1 Score', 'Level 2 Score', 'Level 3 Score', 'Level 4 Score',
+    'Date',
+    'Total Score',
+    'Max Score',
+    'Accuracy',
+    'Reading Level',
+    'Level Label',
+    'Assessment Type',
+    'Level 1 Score',
+    'Level 2 Score',
+    'Level 3 Score',
+    'Level 4 Score',
   ];
 
   const rows = history.map((r) => [
@@ -22,6 +36,7 @@ const downloadCSV = (history) => {
     `${r.accuracy}%`,
     r.reading_level,
     r.level,
+    r.assessment_type || 'Unknown',
     r.level1_score,
     r.level2_score,
     r.level3_score,
@@ -82,7 +97,6 @@ export default function AssessmentHistory({
         >
           Download CSV
         </button>
-
       </div>
 
       {paginatedHistory.map((r, index) => {
@@ -97,11 +111,14 @@ export default function AssessmentHistory({
         });
 
         const isExpanded = expandedLogId === r.id;
-        const { label, color } = getReadingLevelBadge(r.accuracy);
+        const { label, color } = getReadingLevelBadgeByLabel(r.reading_level);
         const isLatest = currentPage === 1 && index === 0;
 
         return (
-          <div key={r.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div
+            key={r.id}
+            className="bg-white rounded-lg shadow-sm border border-gray-200"
+          >
             <button
               className="w-full flex justify-between items-center p-4 hover:bg-gray-50 transition text-left"
               onClick={() => toggleLog(r.id)}
@@ -112,6 +129,18 @@ export default function AssessmentHistory({
                 <span>
                   Score: {r.total_score}/{r.max_score} ({r.accuracy}%)
                 </span>
+
+                {/* 🏷 Assessment Type Tag */}
+                {r.assessment_type === 'With Speech Defect' ? (
+                  <span className="ml-2 mt-1 sm:mt-0 inline-block bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">
+                    With Speech Defect
+                  </span>
+                ) : (
+                  <span className="ml-2 mt-1 sm:mt-0 inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">
+                    Without Speech Defect
+                  </span>
+                )}
+
                 {isLatest && (
                   <span className="ml-2 mt-1 sm:mt-0 inline-block bg-indigo-100 text-indigo-700 text-xs font-semibold px-2 py-0.5 rounded-full">
                     Latest
@@ -144,7 +173,8 @@ export default function AssessmentHistory({
                   </div>
                   <div className="flex justify-between">
                     <span>
-                      Level 4 <span className="text-xs text-gray-500">(×2 pts)</span>:
+                      Level 4{' '}
+                      <span className="text-xs text-gray-500">(×2 pts)</span>:
                     </span>
                     <span className="font-medium">{r.level4_score ?? '—'}</span>
                   </div>
@@ -157,6 +187,7 @@ export default function AssessmentHistory({
 
       <div className="flex justify-center items-center gap-4 pt-6">
         <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
           className="px-3 py-1 rounded bg-[#C6E90E] hover:bg-[#87DC3F] text-[#295A12] disabled:opacity-50"
         >
@@ -164,6 +195,7 @@ export default function AssessmentHistory({
         </button>
         <span className="text-sm text-gray-700">Page {currentPage}</span>
         <button
+          onClick={() => setCurrentPage((prev) => prev + 1)}
           disabled={currentPage * itemsPerPage >= history.length}
           className="px-3 py-1 rounded bg-[#C6E90E] hover:bg-[#87DC3F] text-[#295A12] disabled:opacity-50"
         >

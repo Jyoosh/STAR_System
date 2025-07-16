@@ -1,7 +1,9 @@
 <?php
 // File: api/signin.php
 require __DIR__ . '/bootstrap.php';
-session_start(); // Start the session
+ini_set('session.cookie_samesite', 'None');
+ini_set('session.cookie_secure', '1'); // only on HTTPS
+session_start();
 
 // ── DEV DEBUG: show all PHP errors (remove in production) ────────────
 ini_set('display_errors', '1');

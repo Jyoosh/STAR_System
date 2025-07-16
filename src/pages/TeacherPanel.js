@@ -7,7 +7,6 @@ import StudentSummary from '../components/Teacher/StudentSummary';
 import { FaSearch } from 'react-icons/fa';
 import EditStudentModal from '../components/Teacher/EditStudentModal';
 
-
 export default function TeacherPanel() {
   const API = process.env.REACT_APP_API_BASE || '';
   const { user } = useContext(AuthContext);
@@ -17,18 +16,18 @@ export default function TeacherPanel() {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [nextStudentId, setNextStudentId] = useState('');
-
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-
   const [sortBy, setSortBy] = useState('');
 
-const handleEditStudent = (student) => {
-  console.log('[DEBUG] Edit student:', student); // ← Add this
-  setSelectedStudent(student);
-  setShowEditModal(true);
-};
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
+  const handleEditStudent = (student) => {
+    setSelectedStudent(student);
+    setShowEditModal(true);
+  };
 
   const loadStudents = useCallback(async () => {
     if (!user?.id) {
@@ -42,7 +41,6 @@ const handleEditStudent = (student) => {
         { credentials: 'include' }
       );
       const text = await res.text();
-      console.log('Raw response from getStudents.php:', text);
       const data = JSON.parse(text);
       if (Array.isArray(data)) {
         const uniqueStudents = Array.from(
@@ -50,8 +48,8 @@ const handleEditStudent = (student) => {
         );
         setStudents(uniqueStudents);
       } else {
-        console.error('Invalid data format from getStudents.php', data);
         setStudents([]);
+        console.error('Invalid data format from getStudents.php', data);
       }
     } catch (err) {
       console.error('Failed to fetch students:', err);
@@ -115,6 +113,7 @@ const handleEditStudent = (student) => {
     navigate(`/teacher/students/${student.user_id}/history`);
   };
 
+  // Filter and sort students
   const filteredStudents = students
     .filter((s) =>
       [s.first_name, s.surname, s.user_id]
@@ -126,6 +125,16 @@ const handleEditStudent = (student) => {
       return 0;
     });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const paginatedStudents = filteredStudents.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when search or sort changes
+  }, [searchTerm, sortBy]);
 
   return (
     <div className="p-6 container mx-auto">
@@ -166,10 +175,9 @@ const handleEditStudent = (student) => {
         </select>
       </div>
 
-
       <div className="space-y-4">
-        {filteredStudents.length > 0 ? (
-          filteredStudents.map((student) => (
+        {paginatedStudents.length > 0 ? (
+          paginatedStudents.map((student) => (
             <StudentSummary
               key={student.record_id}
               student={student}
@@ -183,6 +191,31 @@ const handleEditStudent = (student) => {
           <p className="text-gray-600 text-center mt-8">No students found.</p>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-3 mt-6">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-[#295A12] text-white rounded hover:bg-[#398908] disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          <span className="text-sm font-medium text-gray-800">
+            Page <span className="text-green-700">{currentPage}</span> of <span className="text-green-700">{totalPages}</span>
+          </span>
+
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 bg-[#295A12] text-white rounded hover:bg-[#398908] disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {showModal && (
         <AddStudentModal

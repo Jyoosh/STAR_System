@@ -5,19 +5,19 @@ import toast from 'react-hot-toast';
 const API = process.env.REACT_APP_API_BASE;
 
 export default function AddStudentModal({ teacherId, onClose }) {
-const [formData, setFormData] = useState({
-  recordId: '',
-  userId: '',
-  firstName: '',
-  middleName: '',
-  surname: '',
-  email: '',
-  password: '',
-  gender: '',
-  birthday: '',
-  age: '',
-  grade_level: '',
-});
+  const [formData, setFormData] = useState({
+    recordId: '',
+    userId: '',
+    firstName: '',
+    middleName: '',
+    surname: '',
+    email: '',
+    password: '',
+    gender: '',
+    birthday: '',
+    age: '',
+    grade_level: '',
+  });
   const [showPassword, setShowPassword] = useState(false);
 
   // General error message
@@ -26,8 +26,26 @@ const [formData, setFormData] = useState({
   // Helper to update form fields
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === 'birthday') {
+      const today = new Date();
+      const birthDate = new Date(value);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        birthday: value,
+        age: isNaN(age) ? '' : age.toString(),
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
+
 
   // Helper to safely parse JSON or throw
   const safeJsonParse = async (response) => {
@@ -102,24 +120,24 @@ const [formData, setFormData] = useState({
     const toastId = toast.loading('Adding student...');
 
     try {
-      const res = await fetch(`${API}/signup.php`, {
+      const res = await fetch(`${API}/signUp.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-body: JSON.stringify({
-  user_id: trimmedUserId,
-  first_name: formData.firstName.trim(),
-  middle_name: formData.middleName.trim() || null,
-  surname: formData.surname.trim(),
-  email: formData.email.trim(),
-  password: formData.password,
-  role: 'Student',
-  teacher_id: teacherId,
-  gender: formData.gender,
-  birthday: formData.birthday,
-  age: formData.age,
-  grade_level: formData.grade_level,
-}),
+        body: JSON.stringify({
+          user_id: trimmedUserId,
+          first_name: formData.firstName.trim(),
+          middle_name: formData.middleName.trim() || null,
+          surname: formData.surname.trim(),
+          email: formData.email.trim() || `${trimmedUserId}@placeholder.com`, // ✅ fallback email
+          password: formData.password,
+          role: 'Student',
+          teacher_id: teacherId,
+          gender: formData.gender,
+          birthday: formData.birthday,
+          age: formData.age,
+          grade_level: formData.grade_level,
+        }),
       });
 
       const result = await res.json();
@@ -223,30 +241,30 @@ body: JSON.stringify({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-  <div>
-    <label className="block text-sm font-medium text-gray-700">Gender</label>
-    <select name="gender" value={formData.gender} onChange={handleChange} className="w-full p-2 border" required>
-      <option value="">Select Gender</option>
-      <option value="Male">Male</option>
-      <option value="Female">Female</option>
-      <option value="Other">Other</option>
-    </select>
-  </div>
-  <div>
-    <label className="block text-sm font-medium text-gray-700">Birthday</label>
-    <input
-      type="date"
-      name="birthday"
-      value={formData.birthday}
-      onChange={handleChange}
-      className="w-full p-2 border"
-      required
-    />
-  </div>
-</div>
+              <div>
+                {/* <label className="block text-sm font-medium text-gray-700">Gender</label> */}
+                <select name="gender" value={formData.gender} onChange={handleChange} className="w-full p-2 border" required>
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                {/* <label className="block text-sm font-medium text-gray-700">Birthday</label> */}
+                <input
+                  type="date"
+                  name="birthday"
+                  value={formData.birthday}
+                  onChange={handleChange}
+                  className="w-full p-2 border"
+                  required
+                />
+              </div>
+            </div>
 
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-  <input
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* <input
     type="number"
     name="age"
     placeholder="Age"
@@ -254,20 +272,20 @@ body: JSON.stringify({
     onChange={handleChange}
     className="p-2 border"
     required
-  />
-  <input
-    type="text"
-    name="grade_level"
-    placeholder="Grade Level"
-    value={formData.grade_level}
-    onChange={handleChange}
-    className="p-2 border"
-    required
-  />
-</div>
+  /> */}
+              <input
+                type="text"
+                name="grade_level"
+                placeholder="Grade Level"
+                value={formData.grade_level}
+                onChange={handleChange}
+                className="p-2 border"
+                required
+              />
+            </div>
 
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700" htmlFor="email">
                 Email Address
               </label>
@@ -285,7 +303,7 @@ body: JSON.stringify({
               <p className="text-xs text-gray-500 mt-1">
                 If no personal email is available, enter the teacher's email here.
               </p>
-            </div>
+            </div> */}
 
             <div>
               <label className="block text-sm font-medium text-gray-700" htmlFor="password">

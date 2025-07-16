@@ -212,7 +212,7 @@ setTimeout(() => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       {showConfetti && <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />}
       <div className="bg-white p-6 rounded-lg w-full max-w-md space-y-4 shadow-xl">
-        <h2 className="text-2xl font-bold text-center">Level 3: Fill and Recite</h2>
+        <h2 className="text-2xl font-bold text-center">Level 3: Word Builders</h2>
         <p className="text-center text-gray-600">{current.context}</p>
 
         <div className="text-4xl text-center font-mono mb-2">
@@ -250,9 +250,9 @@ setTimeout(() => {
             >
               ⏭️ Skip
             </button>
-            {isListening && (
+            {/* {isListening && (
               <div className="text-center text-blue-600 animate-pulse">🎧 Listening...</div>
-            )}
+            )} */}
           </>
         )}
 

@@ -21,7 +21,7 @@ export default function Level2({ onComplete, debugAutoPass }) {
   const [transcript, setTranscript] = useState('');
   const [listening, setListening] = useState(false);
   const [failCount, setFailCount] = useState(0);
-  const [manualMode, setManualMode] = useState(false);
+  const [manualMode, ] = useState(false);
   const [manualInput, setManualInput] = useState('');
   const [score, setScore] = useState(0);
   const [completed, setCompleted] = useState(false);
@@ -189,7 +189,7 @@ useEffect(() => {
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center px-4 sm:px-6">
       {showConfetti && <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />}
       <div className="w-full sm:max-w-lg md:max-w-xl bg-white shadow-xl rounded-lg space-y-4 p-4 sm:p-6 md:p-8">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-700">Level 2: CVC Word Recognition</h2>
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-700">Level 2: Sound Rangers</h2>
 
         {completed ? (
           <div className="text-center text-lg text-green-700">
@@ -201,7 +201,7 @@ useEffect(() => {
             <div className="text-4xl sm:text-5xl font-bold text-center text-indigo-700">{words[idx]?.word}</div>
             <p className="text-center text-gray-500">{words[idx]?.context}</p>
 
-            <div className="text-sm mt-2 mb-2">
+            {/* <div className="text-sm mt-2 mb-2">
               <label className="inline-flex items-center">
                 <input
                   type="checkbox"
@@ -211,12 +211,12 @@ useEffect(() => {
                 />
                 For Those with Speech Defect Only
               </label>
-            </div>
+            </div> */}
 
             {!manualMode ? (
               <>
                 <button onClick={startListening} disabled={listening || countdown > 0} className="w-full py-2 bg-green-600 text-white rounded">
-                  {countdown > 0 ? `⏳ ${countdown}` : (listening ? '🎧 Listening…' : '🎤 Start Listening')}
+                  {countdown > 0 ? `⏳ ${countdown}` : (listening ? '🎧 Listening…' : '🎤 Start Speaking')}
                 </button>
                 {listening && <button onClick={stopListening} className="w-full py-2 mt-2 bg-red-500 text-white rounded">🛑 Stop</button>}
               </>

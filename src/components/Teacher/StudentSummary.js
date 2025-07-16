@@ -23,7 +23,7 @@ export default function StudentSummary({
     first_name,
     middle_name,
     surname,
-    email,
+    // email,
     gender,
     birthday,
     age,
@@ -44,7 +44,7 @@ export default function StudentSummary({
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4 transition-all">
-      {/* Top row: student name + toggle + buttons */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <div
           className="flex items-center gap-2 cursor-pointer group"
@@ -62,7 +62,7 @@ export default function StudentSummary({
           </div>
         </div>
 
-        {/* Action buttons on the right */}
+        {/* Action buttons */}
         <div className="flex flex-wrap sm:flex-nowrap gap-2 mt-2 sm:mt-0 sm:ml-auto">
           <button
             onClick={(e) => { e.stopPropagation(); onViewResults(student); }}
@@ -91,28 +91,33 @@ export default function StudentSummary({
         </div>
       </div>
 
-      {/* Expandable content */}
+      {/* Expanded details */}
       {expanded && (
-        <div className="mt-4 text-sm text-gray-700 space-y-1">
-          <p>Email: <span className="text-gray-900">{email}</span></p>
-          {gender && <p>Gender: {gender}</p>}
-          {birthday && <p>Birthday: {formatDate(birthday)}</p>}
-          {age !== undefined && <p>Age: {age}</p>}
-          {grade_level && <p>Grade Level: {grade_level}</p>}
+        <div className="mt-4 text-sm text-gray-700 space-y-1 pl-1">
+          {/* <p><strong>Email:</strong> <span className="text-gray-900">{email || 'N/A'}</span></p> */}
+          <p><strong>Gender:</strong> {gender || 'N/A'}</p>
+          <p><strong>Birthday:</strong> {birthday ? formatDate(birthday) : 'N/A'}</p>
+          <p><strong>Age:</strong> {age !== undefined ? age : 'N/A'}</p>
+          <p><strong>Grade Level:</strong> {grade_level || 'N/A'}</p>
           <p>
-            Last Assessed:{' '}
+            <strong>Last Assessed:</strong>{' '}
             {last_assessed_at ? (
-              <span className="text-gray-800 font-medium">{last_assessed_at}</span>
+              <span className="text-gray-800 font-medium">{formatDate(last_assessed_at)}</span>
             ) : (
               <em className="text-gray-400">Never</em>
             )}
           </p>
-          {latest_score !== undefined && latest_level && (
-            <p>
-              Latest Score: <span className="text-blue-700 font-semibold">{latest_score}/40</span>{' '}
-              | Level: <span className="text-purple-700 font-semibold">{latest_level}</span>
-            </p>
-          )}
+          <p>
+            <strong>Latest Score:</strong>{' '}
+            {latest_score !== undefined ? (
+              <>
+                <span className="text-blue-700 font-semibold">{latest_score}/40</span>{' '}
+                | Level: <span className="text-purple-700 font-semibold">{latest_level}</span>
+              </>
+            ) : (
+              <em className="text-gray-400">No scores yet</em>
+            )}
+          </p>
         </div>
       )}
     </div>

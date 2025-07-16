@@ -9,7 +9,7 @@ export default function EditStudentModal({ student, onClose, onSave }) {
   first_name: '',
   middle_name: '',
   surname: '',
-  email: '',
+//   email: '',
   password: '',
   gender: '',
   birthday: '',
@@ -53,7 +53,7 @@ export default function EditStudentModal({ student, onClose, onSave }) {
                     first_name: formData.first_name.trim(),
                     middle_name: formData.middle_name?.trim() || null,
                     surname: formData.surname.trim(),
-                    email: formData.email.trim(),
+                    // email: formData.email.trim(),
                     password: formData.password || null,
                     gender: formData.gender,
                     birthday: formData.birthday,
@@ -186,7 +186,7 @@ export default function EditStudentModal({ student, onClose, onSave }) {
                             />
                         </div>
 
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700" htmlFor="email">
                                 Email Address
                             </label>
@@ -199,7 +199,7 @@ export default function EditStudentModal({ student, onClose, onSave }) {
                                 className="w-full p-2 border"
                                 required
                             />
-                        </div>
+                        </div> */}
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700" htmlFor="password">

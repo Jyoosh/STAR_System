@@ -16,11 +16,8 @@ He said, “I did what was right, and I don’t need any reward.” The merchant
 From that day on, Raj’s reputation as an honest boy spread throughout the village.
 `;
 
-const Level4Story = ({ onComplete }) => {
+export default function Level4Story_SD({ onComplete }) {
   const [hasRead, setHasRead] = useState(false);
-
-  const handleRead = () => setHasRead(true);
-  const handleProceed = () => onComplete();
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center px-4 sm:px-6">
@@ -29,22 +26,28 @@ const Level4Story = ({ onComplete }) => {
           The Story of the Honest Boy<br />
         </h2>
 
-
         <div className="text-gray-700 text-justify whitespace-pre-line leading-relaxed max-h-[60vh] overflow-y-auto border border-gray-200 rounded p-4 bg-gray-50">
           {storyText}
         </div>
 
         <div className="mt-6 space-y-3">
+          {/* <button
+            onClick={handlePlayStory}
+            className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            🔊 Play Story Aloud
+          </button> */}
+
           {!hasRead ? (
             <button
-              onClick={handleRead}
-              className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              onClick={() => setHasRead(true)}
+              className="w-full py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
             >
               I Have Read the Story
             </button>
           ) : (
             <button
-              onClick={handleProceed}
+              onClick={onComplete}
               className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
             >
               Proceed to Quiz
@@ -54,6 +57,4 @@ const Level4Story = ({ onComplete }) => {
       </div>
     </div>
   );
-};
-
-export default Level4Story;
+}

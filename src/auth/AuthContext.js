@@ -11,6 +11,12 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const API_BASE = process.env.REACT_APP_API_BASE;
 
+  // Normalize user object by always including user_id
+  const normalizeUser = (rawUser) => ({
+    ...rawUser,
+    user_id: rawUser?.user_id || rawUser?.id || null,
+  });
+
   // Check current session on mount
   useEffect(() => {
     async function fetchCurrentUser() {
@@ -21,8 +27,9 @@ export function AuthProvider({ children }) {
         const json = await res.json();
 
         if (json.loggedIn) {
-          setUser(json.user);
-          localStorage.setItem('user', JSON.stringify(json.user));
+          const normalized = normalizeUser(json.user);
+          setUser(normalized);
+          localStorage.setItem('user', JSON.stringify(normalized));
         } else {
           setUser(null);
           localStorage.removeItem('user');
@@ -54,8 +61,9 @@ export function AuthProvider({ children }) {
       const json = await res.json();
 
       if (res.ok && json.success) {
-        setUser(json.user);
-        localStorage.setItem('user', JSON.stringify(json.user));
+        const normalized = normalizeUser(json.user);
+        setUser(normalized);
+        localStorage.setItem('user', JSON.stringify(normalized));
         return true;
       }
     } catch (err) {
@@ -80,15 +88,14 @@ export function AuthProvider({ children }) {
     }
   }, [API_BASE]);
 
-if (loading) {
-  return (
-    <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-green-50 to-green-100 text-stargreen-dark">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-stargreen-dark border-opacity-50 mb-4"></div>
-      <p className="text-lg font-semibold">Please Wait...</p>
-    </div>
-  );
-}
-
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-green-50 to-green-100 text-stargreen-dark">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-stargreen-dark border-opacity-50 mb-4"></div>
+        <p className="text-lg font-semibold">Please Wait...</p>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
