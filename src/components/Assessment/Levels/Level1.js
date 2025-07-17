@@ -30,12 +30,12 @@ export default function Level1({ onComplete }) {
   const [listening, setListening] = useState(false);
   const [failCount, setFailCount] = useState(0);
   const [score, setScore] = useState(0);
-const [hasAnyMistake, setHasAnyMistake] = useState(false); // fix destructuring
+  const [hasAnyMistake, setHasAnyMistake] = useState(false); // fix destructuring
   const [countdown, setCountdown] = useState(0);
   const [showConfetti] = useState(false);
   const [matchPairs, setMatchPairs] = useState([]);
   const [matched, setMatched] = useState({});
-  const [manualMode, ] = useState(false);
+  const [manualMode,] = useState(false);
   const [manualInput, setManualInput] = useState('');
   const [matchResults] = useState({});
 
@@ -79,7 +79,7 @@ const [hasAnyMistake, setHasAnyMistake] = useState(false); // fix destructuring
 
   const playSound = (src) => {
     const audio = new Audio(src);
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
   };
 
   // const allMatched = matchPairs.every(pair => matched[pair.upper]);
@@ -89,12 +89,15 @@ const [hasAnyMistake, setHasAnyMistake] = useState(false); // fix destructuring
       setIdx(idxRef.current + 1);
       setTranscript('');
       setManualInput('');
-      setFailCount(0);
+      if (failCount < 3) {
+        setFailCount(0); // only reset if not maxed out
+      }
+
       setStatus('Next letter ready.');
     } else {
       setStep('match');
     }
-  }, [speechLetters.length]);
+  }, [speechLetters.length, failCount]);
 
   const startListening = () => {
     console.log('[Speech] Countdown complete, starting recognition...');
@@ -196,6 +199,24 @@ const [hasAnyMistake, setHasAnyMistake] = useState(false); // fix destructuring
 
   // const restart = () => window.location.reload();
 
+  const renderHearts = () => {
+    const lives = 3; // total hearts
+    const remaining = lives - failCount; // how many hearts left
+
+    const hearts = [];
+    for (let i = 0; i < lives; i++) {
+      hearts.push(
+        <span key={i} className={`text-2xl mx-1 transition-transform duration-300 ${i >= remaining ? 'scale-90 opacity-50' : 'scale-100'}`}>
+          {i < remaining ? '❤️' : '🤍'}
+        </span>
+
+      );
+    }
+
+    return <div className="flex justify-center my-2">{hearts}</div>;
+  };
+
+
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center px-4 sm:px-6">
       {showConfetti && <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />}
@@ -208,8 +229,14 @@ const [hasAnyMistake, setHasAnyMistake] = useState(false); // fix destructuring
             <div className="text-6xl font-bold text-center text-indigo-700">{speechLetters[idx]}</div>
             <p className="text-center text-gray-500">Example: {speechLetters[idx]} as in "{sampleWord(speechLetters[idx])}"</p> */}
 
-<p className="text-center text-gray-600">Say the letter:</p>
-<div className="text-6xl font-bold text-center text-indigo-700">{speechLetters[idx]}</div>
+            <p className="text-center text-gray-600">Say the letter:</p>
+            <div className="text-6xl font-bold text-center text-indigo-700">{speechLetters[idx]}</div>
+
+            {/* Display remaining hearts */}
+            <div className="text-center">
+              {renderHearts()}
+            </div>
+
 
             {/* <div className="text-sm mt-2 mb-2">
               <label className="inline-flex items-center">
@@ -269,75 +296,75 @@ const [hasAnyMistake, setHasAnyMistake] = useState(false); // fix destructuring
         )}
 
         {step === 'match' && (
-  <div>
-    <p className="text-center mb-2">Match uppercase with lowercase:</p>
-    <div className="grid grid-cols-2 gap-4 mt-4">
-      {matchPairs.map(pair => (
-        <div key={pair.upper} className="flex justify-between items-center border p-2">
-          <span className="text-xl font-bold text-indigo-700">{pair.upper}</span>
-<select
-  className={`border rounded px-2 py-1 transition
+          <div>
+            <p className="text-center mb-2">Match uppercase with lowercase:</p>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              {matchPairs.map(pair => (
+                <div key={pair.upper} className="flex justify-between items-center border p-2">
+                  <span className="text-xl font-bold text-indigo-700">{pair.upper}</span>
+                  <select
+                    className={`border rounded px-2 py-1 transition
     ${matchResults[pair.upper] === 'correct' ? 'border-green-500 bg-green-100' : ''}
     ${matchResults[pair.upper] === 'incorrect' ? 'border-red-500 bg-red-100' : ''}`}
-  value={matched[pair.upper]?.toLowerCase() || ''}
-  onChange={(e) =>
-    setMatched(prev => ({
-      ...prev,
-      [pair.upper]: e.target.value,
-    }))
-  }
-  disabled={step === 'done'}
->
-            <option value="">Select</option>
-            {matchPairs.map(p => (
-              <option key={p.lower} value={p.lower}>{p.lower}</option>
-            ))}
-          </select>
-          {matchResults[pair.upper] === 'correct' && <span className="ml-2 text-green-600 text-xl">✔️</span>}
-{matchResults[pair.upper] === 'incorrect' && <span className="ml-2 text-red-600 text-xl">❌</span>}
-        </div>
-      ))}
-    </div>
+                    value={matched[pair.upper]?.toLowerCase() || ''}
+                    onChange={(e) =>
+                      setMatched(prev => ({
+                        ...prev,
+                        [pair.upper]: e.target.value,
+                      }))
+                    }
+                    disabled={step === 'done'}
+                  >
+                    <option value="">Select</option>
+                    {matchPairs.map(p => (
+                      <option key={p.lower} value={p.lower}>{p.lower}</option>
+                    ))}
+                  </select>
+                  {matchResults[pair.upper] === 'correct' && <span className="ml-2 text-green-600 text-xl">✔️</span>}
+                  {matchResults[pair.upper] === 'incorrect' && <span className="ml-2 text-red-600 text-xl">❌</span>}
+                </div>
+              ))}
+            </div>
 
-    <button
-onClick={() => {
-  const incomplete = matchPairs.some(pair => !matched[pair.upper]);
-if (incomplete) {
-  toast.warning('Please select all matches before submitting.', {
-    position: 'top-center',
-    autoClose: 3000,
-  });
-  return;
-}
-
-
-  const newResults = {};
-  let correctCount = 0;
-  let tempMistake = false;
-
-  matchPairs.forEach(pair => {
-    const selected = matched[pair.upper]?.toLowerCase();
-    const isCorrect = selected === pair.lower;
-    newResults[pair.upper] = isCorrect ? 'correct' : 'incorrect';
-    if (isCorrect) correctCount++;
-    else tempMistake = true;
-  });
-
-const finalScore = score + correctCount;
-setScore(finalScore); // properly update score
-setHasAnyMistake(tempMistake);
-setStep('done');
-const passed = !(hasAnyMistake || tempMistake);
-setTimeout(() => onComplete({ score: finalScore, passed }), 2500);
+            <button
+              onClick={() => {
+                const incomplete = matchPairs.some(pair => !matched[pair.upper]);
+                if (incomplete) {
+                  toast.warning('Please select all matches before submitting.', {
+                    position: 'top-center',
+                    autoClose: 3000,
+                  });
+                  return;
+                }
 
 
-}}
-      className="mt-4 w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-    >
-      ✅ Submit Matches
-    </button>
-  </div>
-)}
+                const newResults = {};
+                let correctCount = 0;
+                let tempMistake = false;
+
+                matchPairs.forEach(pair => {
+                  const selected = matched[pair.upper]?.toLowerCase();
+                  const isCorrect = selected === pair.lower;
+                  newResults[pair.upper] = isCorrect ? 'correct' : 'incorrect';
+                  if (isCorrect) correctCount++;
+                  else tempMistake = true;
+                });
+
+                const finalScore = score + correctCount;
+                setScore(finalScore); // properly update score
+                setHasAnyMistake(tempMistake);
+                setStep('done');
+                const passed = !(hasAnyMistake || tempMistake);
+                setTimeout(() => onComplete({ score: finalScore, passed }), 2500);
+
+
+              }}
+              className="mt-4 w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            >
+              ✅ Submit Matches
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

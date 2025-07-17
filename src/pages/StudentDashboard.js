@@ -52,9 +52,11 @@ export default function StudentDashboard() {
 
   const toggleLog = (id) => setExpandedLogId((prev) => (prev === id ? null : id));
 
-  return (
-    <div className="relative min-h-screen bg-gradient-to-br from-green-50 to-green-100 p-2 sm:p-4">
-      {showAssessmentModal && (
+return (
+  <>
+    {/* 🔒 Fullscreen Modal: Outside layout */}
+    {showAssessmentModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <StartAssessmentModal
           onClose={() => setShowAssessmentModal(false)}
           onComplete={() => {
@@ -63,9 +65,11 @@ export default function StudentDashboard() {
           }}
           onSaveComplete={() => setRefreshKey((prev) => prev + 1)}
         />
-      )}
+      </div>
+    )}
 
-      {showSpeechDefectModal && (
+    {showSpeechDefectModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <SpeechDefectAssessment
           onExit={() => setShowSpeechDefectModal(false)}
           onReturnToStart={() => setShowSpeechDefectModal(false)}
@@ -75,8 +79,11 @@ export default function StudentDashboard() {
           }}
           onSaveComplete={() => setRefreshKey((prev) => prev + 1)}
         />
-      )}
+      </div>
+    )}
 
+    {/* 🧱 Page content */}
+    <div className="relative min-h-screen bg-gradient-to-br from-green-50 to-green-100 p-2 sm:p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -89,7 +96,7 @@ export default function StudentDashboard() {
           lastDateDisplay={lastDateDisplay}
           currentLevelDisplay={currentLevelDisplay}
           onStartAssessment={() => setShowAssessmentModal(true)}
-          onStartSpeechDefectAssessment={() => setShowSpeechDefectModal(true)} // if applicable
+          onStartSpeechDefectAssessment={() => setShowSpeechDefectModal(true)}
         />
 
         <AssessmentHistory
@@ -102,5 +109,7 @@ export default function StudentDashboard() {
         />
       </motion.div>
     </div>
-  );
+  </>
+);
+
 }

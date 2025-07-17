@@ -2,17 +2,18 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Confetti from 'react-confetti';
 
 const cvcWords = [
-  { word: 'cat', context: 'Say "cat" as in "the cat is on the mat."' },
-  { word: 'dog', context: 'Say "dog" as in "the dog is barking."' },
-  { word: 'bat', context: 'Say "bat" as in "the bat flew in the night."' },
-  { word: 'hat', context: 'Say "hat" as in "the hat is on my head."' },
-  { word: 'mat', context: 'Say "mat" as in "the mat on the floor."' },
-  { word: 'pen', context: 'Say "pen" as in "the pen is blue."' },
-  { word: 'fan', context: 'Say "fan" as in "the fan is spinning."' },
-  { word: 'man', context: 'Say "man" as in "the man is walking."' },
-  { word: 'sun', context: 'Say "sun" as in "the sun is shining."' },
-  { word: 'run', context: 'Say "run" as in "I like to run."' }
+  { word: 'bag', context: 'Say "bag" as in "the bag is heavy."' },
+  { word: 'bed', context: 'Say "bed" as in "I sleep in the bed."' },
+  { word: 'kid', context: 'Say "kid" as in "The kid is playing."' },
+  { word: 'log', context: 'Say "log" as in "The log is in the fire."' },
+  { word: 'rub', context: 'Say "rub" as in "Rub your hands."' },
+  { word: 'red', context: 'Say "red" as in "The apple is red."' },
+  { word: 'fin', context: 'Say "fin" as in "The fish has a fin."' },
+  { word: 'pen', context: 'Say "pen" as in "Write with a pen."' },
+  { word: 'hop', context: 'Say "hop" as in "The frog will hop."' },
+  { word: 'tub', context: 'Say "tub" as in "I sit in the tub."' }
 ];
+
 
 export default function Level2({ onComplete, debugAutoPass }) {
   const [words, setWords] = useState([]);
@@ -21,12 +22,13 @@ export default function Level2({ onComplete, debugAutoPass }) {
   const [transcript, setTranscript] = useState('');
   const [listening, setListening] = useState(false);
   const [failCount, setFailCount] = useState(0);
-  const [manualMode, ] = useState(false);
+  const [manualMode,] = useState(false);
   const [manualInput, setManualInput] = useState('');
   const [score, setScore] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const safeFailCount = Math.min(failCount, 3);
 
   const scoreRef = useRef(0);
   const wordsRef = useRef([]);
@@ -46,26 +48,26 @@ export default function Level2({ onComplete, debugAutoPass }) {
 
   const hasAutoPassedRef = useRef(false);
 
-const triggerAutoPass = useCallback(() => {
-  if (hasAutoPassedRef.current) return;
-  hasAutoPassedRef.current = true;
-  setCompleted(true);
-  setShowConfetti(true);
-  setStatus('✅ Auto-passed for debug');
-setTimeout(() => {
-  onComplete(10, true); // pass two separate arguments
-}, 1000);
-
-}, [onComplete]); // ⬅️ depends on onComplete only
-
-useEffect(() => {
-  if (typeof debugAutoPass === 'function') {
-    // Delay it to the next tick, so it doesn't fire during parent render
+  const triggerAutoPass = useCallback(() => {
+    if (hasAutoPassedRef.current) return;
+    hasAutoPassedRef.current = true;
+    setCompleted(true);
+    setShowConfetti(true);
+    setStatus('✅ Auto-passed for debug');
     setTimeout(() => {
-      debugAutoPass(triggerAutoPass);
-    }, 0);
-  }
-}, [debugAutoPass, triggerAutoPass]);
+      onComplete(10, true); // pass two separate arguments
+    }, 1000);
+
+  }, [onComplete]); // ⬅️ depends on onComplete only
+
+  useEffect(() => {
+    if (typeof debugAutoPass === 'function') {
+      // Delay it to the next tick, so it doesn't fire during parent render
+      setTimeout(() => {
+        debugAutoPass(triggerAutoPass);
+      }, 0);
+    }
+  }, [debugAutoPass, triggerAutoPass]);
 
 
 
@@ -92,7 +94,7 @@ useEffect(() => {
       const finalScore = scoreRef.current;
       const passed = finalScore === totalItems;
       setTimeout(() => onComplete(finalScore, passed), 1500);
-      
+
     }
   }, [onComplete]);
 
@@ -212,6 +214,10 @@ useEffect(() => {
                 For Those with Speech Defect Only
               </label>
             </div> */}
+
+            <div className="text-center text-red-500 text-2xl">
+              {"❤️".repeat(3 - safeFailCount)}{"🤍".repeat(safeFailCount)}
+            </div>
 
             {!manualMode ? (
               <>

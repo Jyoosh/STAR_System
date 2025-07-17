@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUserGraduate, FaClock, FaLevelUpAlt, FaRedo, FaPlay, FaInfoCircle } from 'react-icons/fa';
+import {
+  FaUserGraduate,
+  FaClock,
+  FaLevelUpAlt,
+  FaRedo,
+  FaPlay,
+  FaGamepad,
+  FaInfoCircle,
+} from 'react-icons/fa';
+import MiniGamesModal from '../MiniGames/MiniGamesModal'; // Adjust the path if needed
 
 export default function UserSummary({
   firstName,
@@ -8,9 +17,11 @@ export default function UserSummary({
   lastDateDisplay,
   currentLevelDisplay,
   onReplayIntro,
-  onStartAssessment
+  onStartAssessment,
 }) {
-  const hasHistory = lastDateDisplay && currentLevelDisplay && currentLevelDisplay !== 'Not assessed yet';
+  const [showMiniGamesModal, setShowMiniGamesModal] = useState(false);
+  const hasHistory =
+    lastDateDisplay && currentLevelDisplay && currentLevelDisplay !== 'Not assessed yet';
 
   return (
     <div className="space-y-4 text-sm sm:text-base">
@@ -71,6 +82,17 @@ export default function UserSummary({
           <FaPlay />
           {hasHistory ? 'Retake Assessment' : 'Start Assessment'}
         </motion.button>
+
+        {/* ▶️ Mini Games Button */}
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => setShowMiniGamesModal(true)}
+          className="w-full py-2.5 bg-[#398908] text-white rounded-lg hover:bg-[#295A12] focus:outline-none focus:ring-2 focus:ring-[#C6E90E] transition flex items-center justify-center gap-2 text-sm sm:text-base"
+        >
+          <FaGamepad />
+          Mini Games
+        </motion.button>
       </div>
 
       {!hasHistory && (
@@ -78,6 +100,11 @@ export default function UserSummary({
           <FaInfoCircle className="text-[#398908]" />
           You haven't taken an assessment yet. Click "Start Assessment" to begin.
         </div>
+      )}
+
+      {/* 🎮 Mini Games Modal */}
+      {showMiniGamesModal && (
+        <MiniGamesModal onClose={() => setShowMiniGamesModal(false)} />
       )}
     </div>
   );

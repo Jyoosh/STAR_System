@@ -27,6 +27,7 @@ export default function AdminPanel() {
 
         if (cRes.counts) setCounts(cRes.counts);
         setNextIds(cRes.nextIds || {});
+        console.log('Fetched users:', uRes);
         setUsers(uRes.active || []);
         setDeletedUsers(uRes.deleted || []);
       } catch (e) {

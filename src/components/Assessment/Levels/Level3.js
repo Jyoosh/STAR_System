@@ -6,17 +6,18 @@ const dingSound = '/assets/audio/sound_effects/ding.mp3';
 const incorrectSound = '/assets/audio/sound_effects/incorrect.mp3';
 
 const diphthongWords = [
-  { word: 'sauce', context: 'tomato ____' },
-  { word: 'saw', context: 'I ____ a bird' },
   { word: 'boat', context: 'the ____ floats' },
-  { word: 'rain', context: 'falling ____' },
-  { word: 'coat', context: 'winter ____' },
-  { word: 'light', context: 'turn on the ____' },
-  { word: 'night', context: 'good ____' },
-  { word: 'brown', context: '____ bear' },
   { word: 'cloud', context: 'white ____' },
-  { word: 'house', context: 'my ____' }
+  { word: 'brown', context: '____ bear' },
+  { word: 'coin', context: 'drop a ____' },
+  { word: 'loud', context: 'very ____ noise' },
+  { word: 'toast', context: 'buttered ____' },
+  { word: 'soil', context: 'plant in the ____' },
+  { word: 'chair', context: 'sit on the ____' },
+  { word: 'mouse', context: 'a small ____ ran' },
+  { word: 'boil', context: '____ the water' }
 ];
+
 
 export default function Level3({ onComplete }) {
   const [words, setWords] = useState([]);
@@ -33,6 +34,7 @@ export default function Level3({ onComplete }) {
   const [showConfetti, setShowConfetti] = useState(false);
   const recognitionRef = useRef(null);
   const countdownRef = useRef(null);
+  const safeAttempts = Math.min(attempts, 3);
 
   const current = words[idx];
 
@@ -61,7 +63,7 @@ export default function Level3({ onComplete }) {
 
   const playSound = (src) => {
     const audio = new Audio(src);
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
   };
 
   const handleLetterClick = (letter) => {
@@ -141,36 +143,36 @@ export default function Level3({ onComplete }) {
       const parts = heard.split(/\s+/);
       if (parts.length >= 2 && parts[0] === parts[1]) heard = parts[0];
 
-if (heard === expected) {
-  const newScore = score + 1; // ✅ local variable
-  setScore(newScore);
-  setStatus(`✅ You said "${heard}"`);
-  playSound(dingSound);
-  setTimeout(() => {
-    if (idx + 1 < words.length) {
-      setIdx(prev => prev + 1);
-    } else {
-      setShowConfetti(true);
-      setTimeout(() => onComplete(newScore, mistakes === 0), 1500); // ✅ use local value
-    }
-  }, 800);
-}
+      if (heard === expected) {
+        const newScore = score + 1; // ✅ local variable
+        setScore(newScore);
+        setStatus(`✅ You said "${heard}"`);
+        playSound(dingSound);
+        setTimeout(() => {
+          if (idx + 1 < words.length) {
+            setIdx(prev => prev + 1);
+          } else {
+            setShowConfetti(true);
+            setTimeout(() => onComplete(newScore, mistakes === 0), 1500); // ✅ use local value
+          }
+        }, 800);
+      }
 
- else {
+      else {
         const nextAttempt = attempts + 1;
         if (nextAttempt >= 3) {
           setStatus(`❌ Final attempt used. The word was "${expected}".`);
           playSound(incorrectSound);
           const finalMistakes = mistakes + 1;
-setMistakes(finalMistakes);
-setTimeout(() => {
-  if (idx + 1 < words.length) {
-    setIdx(prev => prev + 1);
-  } else {
-    setShowConfetti(true);
-    setTimeout(() => onComplete(score, finalMistakes === 0), 1500); // ✅ correct value
-  }
-}, 1000);
+          setMistakes(finalMistakes);
+          setTimeout(() => {
+            if (idx + 1 < words.length) {
+              setIdx(prev => prev + 1);
+            } else {
+              setShowConfetti(true);
+              setTimeout(() => onComplete(score, finalMistakes === 0), 1500); // ✅ correct value
+            }
+          }, 1000);
         } else {
           setAttempts(nextAttempt);
           setStatus(`❌ You said "${heard}". Try again (${nextAttempt}/3)`);
@@ -193,16 +195,16 @@ setTimeout(() => {
   };
 
   const skipWord = () => {
-const finalMistakes = mistakes + 1;
-setMistakes(finalMistakes);
-setTimeout(() => {
-  if (idx + 1 < words.length) {
-    setIdx(prev => prev + 1);
-  } else {
-    setShowConfetti(true);
-    setTimeout(() => onComplete(score, finalMistakes === 0), 1500); // ✅
-  }
-}, 800);
+    const finalMistakes = mistakes + 1;
+    setMistakes(finalMistakes);
+    setTimeout(() => {
+      if (idx + 1 < words.length) {
+        setIdx(prev => prev + 1);
+      } else {
+        setShowConfetti(true);
+        setTimeout(() => onComplete(score, finalMistakes === 0), 1500); // ✅
+      }
+    }, 800);
 
   };
 
@@ -213,6 +215,11 @@ setTimeout(() => {
       {showConfetti && <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />}
       <div className="bg-white p-6 rounded-lg w-full max-w-md space-y-4 shadow-xl">
         <h2 className="text-2xl font-bold text-center">Level 3: Word Builders</h2>
+        
+        <div className="text-center text-red-500 text-2xl">
+          {"❤️".repeat(3 - safeAttempts)}{"🤍".repeat(safeAttempts)}
+        </div>
+
         <p className="text-center text-gray-600">{current.context}</p>
 
         <div className="text-4xl text-center font-mono mb-2">

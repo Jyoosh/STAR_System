@@ -39,7 +39,7 @@ export default function Level1_SD({ onComplete, onExit }) {
 
   const playSound = (src) => {
     const audio = new Audio(src);
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
   };
 
   const speak = (text) => {
@@ -70,26 +70,28 @@ export default function Level1_SD({ onComplete, onExit }) {
   };
 
   const handleSubmitManual = () => {
-    const expected = speechLetters[idx];
-    const userInput = manualInput.trim().toUpperCase();
+  const expected = speechLetters[idx];
+  const userInput = manualInput.trim().toUpperCase();
 
-    if (userInput === expected) {
-      setScore(prev => prev + 1);
-      playSound(dingSound);
-      nextSpeech();
+  if (userInput === expected) {
+    setScore(prev => prev + 1);
+    playSound(dingSound);
+    nextSpeech();
+  } else {
+    const nextFailCount = failCount + 1;
+    setFailCount(nextFailCount);
+    setHasAnyMistake(true);
+    playSound(incorrectSound);
+
+    if (nextFailCount >= 3) {
+      setStatus(`❌ Incorrect. The answer was "${expected}".`);
+      setTimeout(nextSpeech, 1200);
     } else {
-      setFailCount(prev => prev + 1);
-      setHasAnyMistake(true);
-      playSound(incorrectSound);
-
-      if (failCount + 1 >= 3) {
-        setStatus(`❌ Incorrect. The answer was "${expected}".`);
-        setTimeout(nextSpeech, 1200);
-      } else {
-        setStatus(`❌ Try again (${failCount + 1}/3)`);
-      }
+      setStatus(`❌ Try again (${nextFailCount}/3)`);
     }
-  };
+  }
+};
+
 
   const handleSkip = () => {
     setHasAnyMistake(true);
@@ -132,6 +134,20 @@ export default function Level1_SD({ onComplete, onExit }) {
     }, 1500);
   };
 
+  const renderHearts = () => {
+  return (
+    <div className="flex justify-center mb-2 space-x-1">
+      {[0, 1, 2].map(i => (
+        <span key={i} className="text-xl">
+          {i < 3 - failCount ? '❤️' : '🤍'}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+
+
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center px-4 sm:px-6">
       {showConfetti && <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />}
@@ -140,6 +156,7 @@ export default function Level1_SD({ onComplete, onExit }) {
 
         {step === 'speech' && (
           <>
+          {renderHearts()}
             <p className="text-center text-gray-600">Listen and type the letter you heard.</p>
 
             <button
@@ -183,10 +200,9 @@ export default function Level1_SD({ onComplete, onExit }) {
                 <div key={pair.upper} className="flex items-center justify-between border p-2">
                   <span className="font-bold text-indigo-700">{pair.upper}</span>
                   <select
-                    className={`border rounded px-2 py-1 transition ${
-                      matchResults[pair.upper] === 'correct' ? 'bg-green-100' :
-                      matchResults[pair.upper] === 'incorrect' ? 'bg-red-100' : ''
-                    }`}
+                    className={`border rounded px-2 py-1 transition ${matchResults[pair.upper] === 'correct' ? 'bg-green-100' :
+                        matchResults[pair.upper] === 'incorrect' ? 'bg-red-100' : ''
+                      }`}
                     value={matched[pair.upper]?.toLowerCase() || ''}
                     onChange={(e) =>
                       setMatched(prev => ({ ...prev, [pair.upper]: e.target.value }))

@@ -18,7 +18,11 @@ export default function TeacherPanel() {
   const [nextStudentId, setNextStudentId] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [sortBy, setSortBy] = useState('');
+  const [sortBy,] = useState('');
+  const [gradeFilter, setGradeFilter] = useState('');
+  const [genderFilter, setGenderFilter] = useState('');
+
+
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -113,17 +117,28 @@ export default function TeacherPanel() {
     navigate(`/teacher/students/${student.user_id}/history`);
   };
 
+  const uniqueGrades = Array.from(new Set(students.map((s) => s.grade_level).filter(Boolean))).sort();
+
+  const gradeCounts = uniqueGrades.map((grade) => {
+    const count = students.filter((s) => s.grade_level === grade).length;
+    return { grade, count };
+  });
+
   // Filter and sort students
   const filteredStudents = students
     .filter((s) =>
       [s.first_name, s.surname, s.user_id]
         .some((field) => field?.toLowerCase().includes(searchTerm.toLowerCase()))
     )
+    .filter((s) => (gradeFilter ? s.grade_level === gradeFilter : true))
+    .filter((s) => (genderFilter ? s.gender === genderFilter : true))
     .sort((a, b) => {
       if (sortBy === 'age') return (a.age ?? 0) - (b.age ?? 0);
       if (sortBy === 'grade') return (a.grade_level || '').localeCompare(b.grade_level || '', undefined, { numeric: true });
       return 0;
     });
+
+
 
   // Pagination logic
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
@@ -142,7 +157,7 @@ export default function TeacherPanel() {
         <h2 className="text-2xl font-bold text-[#295A12]">Teacher Dashboard</h2>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <button
           onClick={fetchNextStudentId}
           className="bg-[#295A12] hover:bg-[#398908] text-white px-4 py-2 rounded w-full sm:w-auto transition"
@@ -162,18 +177,60 @@ export default function TeacherPanel() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mb-4">
-        <label className="text-sm font-medium text-gray-700">Sort by:</label>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="p-2 border border-gray-300 rounded"
-        >
-          <option value="">None</option>
-          <option value="age">Age</option>
-          <option value="grade">Grade Level</option>
-        </select>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1">Filter by Gender:</label>
+          <select
+            value={genderFilter}
+            onChange={(e) => setGenderFilter(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          >
+            <option value="">All</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1">Filter by Grade:</label>
+          <select
+            value={gradeFilter}
+            onChange={(e) => setGradeFilter(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          >
+            <option value="">All Grades</option>
+            {gradeCounts.map(({ grade, count }) => (
+              <option key={grade} value={grade}>
+                {grade} ({count})
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
+
+      <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
+        <h2 className="text-base font-semibold text-gray-800 mb-2">
+          📚 Summary
+        </h2>
+        <p className="text-sm text-gray-700 mb-3">
+          Total Non-Readers: <span className="font-bold text-red-600">{students.length}</span>
+        </p>
+        <div className="space-y-1 max-h-[200px] overflow-y-auto sm:max-h-none text-sm">
+          {gradeCounts.map(({ grade, count }) => (
+            <div
+              key={grade}
+              className={`cursor-pointer px-2 py-1 rounded-md hover:bg-gray-100 transition-colors ${grade === gradeFilter ? 'text-green-800 font-semibold' : 'text-gray-700'}`}
+              onClick={() => setGradeFilter(grade)}
+            >
+              Grade {grade}: <span className="font-medium text-red-500">{count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+
+
 
       <div className="space-y-4">
         {paginatedStudents.length > 0 ? (
@@ -194,7 +251,7 @@ export default function TeacherPanel() {
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-3 mt-6">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-6 text-sm">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}

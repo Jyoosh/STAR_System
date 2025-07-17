@@ -57,8 +57,11 @@ try {
 
   if (!empty($input['password'])) {
     $fields[] = 'password_hash = :password_hash';
+    $fields[] = 'plain_password = :plain_password';
     $params[':password_hash'] = password_hash($input['password'], PASSWORD_DEFAULT);
+    $params[':plain_password'] = $input['password'];
   }
+
 
   if (isset($input['gender'])) {
     $fields[] = 'gender = :gender';

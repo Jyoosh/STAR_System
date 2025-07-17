@@ -1,8 +1,8 @@
 <?php
-// File: public/api/getUsers.php
-require __DIR__ . '/bootstrap.php';
-ini_set('display_errors', '1');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+require __DIR__ . '/bootstrap.php';
 
 // ── CORS Setup ───────────────────────────────────────
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -35,23 +35,30 @@ function fetchUsers($pdo, $is_deleted, $roleFilter, $q) {
             u.middle_name,
             u.surname,
             u.email,
+            u.plain_password AS password,  -- show actual password
+            u.gender,
+            u.birthday,
+            u.grade_level,
             u.role,
+            u.teacher_id,
             t.user_id AS teacher_user_id,
-            u.is_deleted
+            u.is_deleted,
+            u.created_at,
+            u.updated_at
         FROM users u
         LEFT JOIN users t ON u.teacher_id = t.id
-        WHERE u.role IN ('Teacher', 'Student') 
+        WHERE u.role IN ('Teacher', 'Student')
           AND u.is_deleted = :is_deleted
     ";
 
     $params = [':is_deleted' => $is_deleted];
 
-    if (in_array($roleFilter, ['Teacher', 'Student'], true)) {
+    if ($roleFilter === 'Teacher' || $roleFilter === 'Student') {
         $sql .= " AND u.role = :role";
         $params[':role'] = $roleFilter;
     }
 
-    if ($q !== '') {
+    if (!empty($q)) {
         $sql .= " AND (
             u.user_id LIKE :q
             OR u.first_name LIKE :q
@@ -68,10 +75,17 @@ function fetchUsers($pdo, $is_deleted, $roleFilter, $q) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-$activeUsers = fetchUsers($pdo, 0, $roleFilter, $q);
-$deletedUsers = fetchUsers($pdo, 1, $roleFilter, $q);
+try {
+    $activeUsers = fetchUsers($pdo, 0, $roleFilter, $q);
+    $deletedUsers = fetchUsers($pdo, 1, $roleFilter, $q);
 
-echo json_encode([
-    'active' => $activeUsers,
-    'deleted' => $deletedUsers
-]);
+    echo json_encode([
+        'active' => $activeUsers,
+        'deleted' => $deletedUsers
+    ]);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'Server error: ' . $e->getMessage()
+    ]);
+}

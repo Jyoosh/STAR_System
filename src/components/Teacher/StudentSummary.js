@@ -6,7 +6,9 @@ import {
   Trash2,
   Pencil,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export default function StudentSummary({
@@ -17,13 +19,13 @@ export default function StudentSummary({
   onEdit
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // 👈 for toggling password
 
   const {
     user_id,
     first_name,
     middle_name,
     surname,
-    // email,
     gender,
     birthday,
     age,
@@ -31,6 +33,7 @@ export default function StudentSummary({
     latest_score,
     latest_level,
     last_assessed_at,
+    password // 👈 ensure this is passed from student object
   } = student;
 
   const formatDate = (dateStr) => {
@@ -63,7 +66,7 @@ export default function StudentSummary({
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-wrap sm:flex-nowrap gap-2 mt-2 sm:mt-0 sm:ml-auto">
+        <div className="flex flex-wrap sm:flex-nowrap sm:justify-end gap-2 mt-2 sm:mt-0 w-full sm:w-auto">
           <button
             onClick={(e) => { e.stopPropagation(); onViewResults(student); }}
             className="flex items-center gap-1 bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 text-sm"
@@ -94,7 +97,6 @@ export default function StudentSummary({
       {/* Expanded details */}
       {expanded && (
         <div className="mt-4 text-sm text-gray-700 space-y-1 pl-1">
-          {/* <p><strong>Email:</strong> <span className="text-gray-900">{email || 'N/A'}</span></p> */}
           <p><strong>Gender:</strong> {gender || 'N/A'}</p>
           <p><strong>Birthday:</strong> {birthday ? formatDate(birthday) : 'N/A'}</p>
           <p><strong>Age:</strong> {age !== undefined ? age : 'N/A'}</p>
@@ -117,6 +119,19 @@ export default function StudentSummary({
             ) : (
               <em className="text-gray-400">No scores yet</em>
             )}
+          </p>
+          <p className="flex items-center gap-2">
+            <strong>Password:</strong>{' '}
+            <span className="font-mono">
+              {showPassword ? password : '*'.repeat(password?.length || 8)}
+            </span>
+            <button
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-gray-500 hover:text-gray-800 focus:outline-none"
+              title={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </p>
         </div>
       )}

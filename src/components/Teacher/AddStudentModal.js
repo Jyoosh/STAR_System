@@ -331,8 +331,9 @@ export default function AddStudentModal({ teacherId, onClose }) {
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Password will be securely hashed before storage.
+                Password will be securely hashed for login, but also stored in plain text for admin and teacher access.
               </p>
+
             </div>
 
             {error && <p className="text-red-600 text-sm">{error}</p>}

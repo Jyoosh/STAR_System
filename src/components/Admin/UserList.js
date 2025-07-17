@@ -16,6 +16,8 @@ export default function UserList({
   const [selected, setSelected] = useState(new Set());
   const [confirmAction, setConfirmAction] = useState({ id: null, action: '' });
   const pageSize = 10;
+  const [visiblePasswords, setVisiblePasswords] = useState({});
+
 
   const displayUsers = activeTab === 'active' ? users : deletedUsers;
 
@@ -136,6 +138,18 @@ export default function UserList({
                   {sortBy.key === 'email' && <span className="ml-1">{sortBy.asc ? '↑' : '↓'}</span>}
                 </div>
               </th> */}
+
+              <th
+                className="p-2 border cursor-pointer"
+                onClick={() => setSortBy(s => ({ key: 'password', asc: s.key === 'password' ? !s.asc : true }))}
+              >
+                <div className="flex items-center">
+                  Password
+                  {sortBy.key === 'password' && <span className="ml-1">{sortBy.asc ? '↑' : '↓'}</span>}
+                </div>
+              </th>
+
+
               <th className="p-2 border">Actions</th>
             </tr>
           </thead>
@@ -162,6 +176,18 @@ export default function UserList({
                 <td className="p-2">
                   {u.first_name} {u.middle_name ? `${u.middle_name} ` : ''}{u.surname}
                 </td>
+                <td className="p-2 whitespace-nowrap">
+                  {visiblePasswords[u.id] ? u.password : '•••••••'}
+                  <button
+                    onClick={() =>
+                      setVisiblePasswords(prev => ({ ...prev, [u.id]: !prev[u.id] }))
+                    }
+                    className="ml-2 text-blue-600 hover:underline text-xs"
+                  >
+                    {visiblePasswords[u.id] ? 'Hide' : 'Show'}
+                  </button>
+                </td>
+
                 {/* <td className="p-2">{u.email}</td> */}
                 <td className="p-2 space-x-2">
                   {activeTab === 'active' ? (
@@ -211,6 +237,18 @@ export default function UserList({
                 {u.teacher_user_id && (
                   <p className="text-sm text-gray-600">Teacher ID: {u.teacher_user_id}</p>
                 )}
+                <p className="text-sm text-gray-600">
+                  Password: {visiblePasswords[u.id] ? u.password : '•••••••'}
+                  <button
+                    onClick={() =>
+                      setVisiblePasswords(prev => ({ ...prev, [u.id]: !prev[u.id] }))
+                    }
+                    className="ml-2 text-blue-600 hover:underline text-xs"
+                  >
+                    {visiblePasswords[u.id] ? 'Hide' : 'Show'}
+                  </button>
+                </p>
+
               </div>
               <div>
                 {activeTab === 'active' ? (
@@ -279,28 +317,27 @@ export default function UserList({
               >
                 Cancel
               </button>
-<button
-onClick={() => {
-  const user = paged.find(u => u.id === confirmAction.id);
-  if (!user) return;
+              <button
+                onClick={() => {
+                  const user = paged.find(u => u.id === confirmAction.id);
+                  if (!user) return;
 
-  if (confirmAction.action === 'delete') {
-    onDelete(user.user_id);
-    toast.success(`User ${user.user_id} deleted.`);
-  } else {
-    onRestore(user.id);
-    toast.success(`User ${user.user_id} restored.`);
-  }
+                  if (confirmAction.action === 'delete') {
+                    onDelete(user.user_id);
+                    toast.success(`User ${user.user_id} deleted.`);
+                  } else {
+                    onRestore(user.id);
+                    toast.success(`User ${user.user_id} restored.`);
+                  }
 
-  setConfirmAction({ id: null, action: '' });
-}}
+                  setConfirmAction({ id: null, action: '' });
+                }}
 
-  className={`px-4 py-2 text-white rounded ${
-    confirmAction.action === 'delete' ? 'bg-red-600' : 'bg-green-600'
-  }`}
->
-  {confirmAction.action === 'delete' ? 'Delete' : 'Restore'}
-</button>
+                className={`px-4 py-2 text-white rounded ${confirmAction.action === 'delete' ? 'bg-red-600' : 'bg-green-600'
+                  }`}
+              >
+                {confirmAction.action === 'delete' ? 'Delete' : 'Restore'}
+              </button>
             </div>
           </div>
         </div>

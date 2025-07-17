@@ -3,16 +3,17 @@ import React, { useEffect, useState, useCallback } from 'react';
 // Question format: { cue: "...", answer: "..." }
 const questions = [
   { cue: 'Put it on the table', answer: 'table' },
-  { cue: 'Turn on the light', answer: 'light' },
+  { cue: 'Turn on the lamp', answer: 'lamp' },            
   { cue: 'Wear your shoes', answer: 'shoes' },
   { cue: 'Close the door', answer: 'door' },
   { cue: 'Drink from the glass', answer: 'glass' },
   { cue: 'Get the book', answer: 'book' },
   { cue: 'Wash your hands', answer: 'hands' },
   { cue: 'Open the window', answer: 'window' },
-  { cue: 'Play with the ball', answer: 'ball' },
+  { cue: 'Throw the toy', answer: 'toy' },                
   { cue: 'Sit on the chair', answer: 'chair' }
 ];
+
 
 function shuffleArray(array) {
   return [...array].sort(() => Math.random() - 0.5);
@@ -96,6 +97,16 @@ export default function Level3_SD({ onComplete }) {
     }
   };
 
+  const renderHearts = () => (
+    <div className="flex justify-center mb-4 space-x-1">
+      {[0, 1, 2].map(i => (
+        <span key={i} className="text-xl">
+          {i < attemptsLeft ? '❤️' : '🤍'}
+        </span>
+      ))}
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6">
       <div className="absolute inset-0 bg-gradient-to-br from-green-100 via-white to-green-200 bg-opacity-70 backdrop-blur-md transition-opacity duration-300"></div>
@@ -104,6 +115,9 @@ export default function Level3_SD({ onComplete }) {
         <h2 className="text-xl sm:text-2xl font-bold text-center text-green-700 mb-2">
           Level 3: Jumbled Letters, Listen, and Type
         </h2>
+
+        {isAnswering && renderHearts()}
+        
         <p className="text-center text-gray-700 mb-4">
           Listen to the sentence. Then type the correct word using the jumbled letters.
         </p>
@@ -143,11 +157,6 @@ export default function Level3_SD({ onComplete }) {
             {feedback}
           </div>
         )}
-
-        {/* Attempts */}
-        <div className="text-center mt-2 text-sm text-gray-600">
-          Attempts left: {attemptsLeft}
-        </div>
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">

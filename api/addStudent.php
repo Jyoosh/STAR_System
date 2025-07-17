@@ -23,41 +23,23 @@ foreach ($required as $field) {
 }
 
 // Extract & sanitize
-$user_id        = trim($data['user_id']);
-$record_id      = $user_id;
-$first_name     = trim($data['first_name']);
-$middle_name    = isset($data['middle_name']) ? trim($data['middle_name']) : null;
-$surname        = trim($data['surname']);
-$email          = isset($data['email']) ? trim($data['email']) : null;
-$password       = $data['password'];
-$role           = trim($data['role']);
-$teacher_user_id= $data['teacher_id'] ?? null;
-$student_id     = $data['student_id'] ?? null;
+$user_id         = trim($data['user_id']);
+$record_id       = $user_id;
+$first_name      = trim($data['first_name']);
+$middle_name     = $data['middle_name'] ?? null;
+$surname         = trim($data['surname']);
+$email           = $data['email'] ?? null;
+$password        = $data['password'];
+$role            = trim($data['role']);
+$teacher_user_id = $data['teacher_id'] ?? null;
+$student_id      = $data['student_id'] ?? null;
 $is_reusing_deleted = $data['is_reusing_deleted'] ?? false;
-$gender         = $data['gender'] ?? null;
-$birthday       = $data['birthday'] ?? null;
-$age            = isset($data['age']) ? (int) $data['age'] : null;
-$grade_level    = $data['grade_level'] ?? null;
+$gender          = $data['gender'] ?? null;
+$birthday        = $data['birthday'] ?? null;
+$age             = isset($data['age']) ? (int) $data['age'] : null;
+$grade_level     = $data['grade_level'] ?? null;
 
-// Optional email validation
-if ($email !== null && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-  http_response_code(400);
-  echo json_encode(['error' => 'Invalid email format']);
-  exit;
-}
-
-// Optional check for duplicate active email
-/*
-$stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND is_deleted = 0");
-$stmt->execute([$email]);
-if ($stmt->fetch()) {
-  http_response_code(409);
-  echo json_encode(['error' => 'Email already in use']);
-  exit;
-}
-*/
-
-// Resolve teacher ID if applicable
+// Resolve teacher_id if role is student
 $teacher_id = null;
 if ($teacher_user_id && $role === 'Student') {
   $stmt = $pdo->prepare("SELECT id, is_deleted FROM users WHERE user_id = ? AND role = 'Teacher'");
@@ -72,7 +54,7 @@ if ($teacher_user_id && $role === 'Student') {
 
   if ((int)$teacher['is_deleted'] === 1) {
     http_response_code(400);
-    echo json_encode(['error' => 'Assigned teacher is deleted. Please choose another teacher.']);
+    echo json_encode(['error' => 'Assigned teacher is deleted. Please choose another.']);
     exit;
   }
 
@@ -94,6 +76,7 @@ if ($is_reusing_deleted) {
           surname = ?, 
           email = ?, 
           password_hash = ?, 
+          plain_password = ?, 
           role = ?, 
           teacher_id = ?, 
           student_id = ?, 
@@ -101,18 +84,20 @@ if ($is_reusing_deleted) {
           birthday = ?, 
           age = ?, 
           grade_level = ?, 
-          is_deleted = 0,
-          deleted_at = NULL,
+          is_deleted = 0, 
+          deleted_at = NULL, 
           updated_at = NOW()
         WHERE user_id = ?
       ");
+
       $hash = password_hash($password, PASSWORD_DEFAULT);
       $stmt->execute([
         $first_name,
         $middle_name,
         $surname,
         $email,
-        password_hash($password, PASSWORD_DEFAULT),
+        $hash,
+        $password,
         $role,
         $teacher_id,
         $student_id,
@@ -123,7 +108,7 @@ if ($is_reusing_deleted) {
         $user_id
       ]);
 
-      echo json_encode(['success' => true, 'user_id' => $user_id]);
+      echo json_encode(['success' => true, 'user_id' => $user_id, 'restored' => true]);
       exit;
     } catch (PDOException $e) {
       http_response_code(500);
@@ -144,6 +129,7 @@ try {
       surname,
       email,
       password_hash,
+      plain_password,
       role,
       teacher_id,
       student_id,
@@ -151,7 +137,7 @@ try {
       birthday,
       age,
       grade_level
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   ");
 
   $stmt->execute([
@@ -162,6 +148,7 @@ try {
     $surname,
     $email,
     password_hash($password, PASSWORD_DEFAULT),
+    $password,
     $role,
     $teacher_id,
     $student_id,

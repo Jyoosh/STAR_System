@@ -14,6 +14,8 @@ import TeacherPanel from './pages/TeacherPanel';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentResults from './pages/StudentResults';
 import StudentHistory from './pages/StudentHistory';
+import MiniGamesModal from './components/MiniGames/MiniGamesModal';
+
 
 import TrialReadingTest from './components/Assessment/TrialReadingTest';
 import { ReactComponent as StarLogo } from './assets/STAR_Logo.svg';
@@ -21,6 +23,8 @@ import { ReactComponent as StarLogo } from './assets/STAR_Logo.svg';
 export default function App() {
   const { user, logout } = useContext(AuthContext);
   const [showTrial, setShowTrial] = useState(false);
+  const [showMiniGamesModal, setShowMiniGamesModal] = useState(false);
+
 
   return (
     <Router>
@@ -135,7 +139,10 @@ export default function App() {
               <main className="flex-grow p-6 bg-gradient-to-br from-green-50 to-green-100">
                 <PrivateRoute>
                   <RoleRoute role="Student">
-                    <StudentDashboard onLaunchTrial={() => setShowTrial(true)} />
+                    <StudentDashboard
+                      onLaunchTrial={() => setShowTrial(true)}
+                      onLaunchMiniGames={() => setShowMiniGamesModal(true)}
+                    />
                   </RoleRoute>
                 </PrivateRoute>
               </main>
@@ -144,6 +151,11 @@ export default function App() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+
+        {/* ✅ Here is the modal usage */}
+        {showMiniGamesModal && (
+          <MiniGamesModal onClose={() => setShowMiniGamesModal(false)} />
+        )}
 
         {/* Footer */}
         <footer className="bg-stargreen-medium text-white text-center p-2">

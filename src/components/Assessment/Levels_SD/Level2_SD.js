@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 
 const wordList = [
-  "cat", "dog", "sun", "bed", "red", "hat", "net", "pen", "cup", "pig"
+  "bag", "bed", "kid", "log", "rub", "red", "fin", "pen", "hop", "tub"
 ];
+
 
 function shuffle(array) {
   return array.sort(() => Math.random() - 0.5);
@@ -81,6 +82,16 @@ export default function Level2_SD({ onComplete }) {
     }
   };
 
+  const renderHearts = () => (
+    <div className="flex justify-center mb-4 space-x-1">
+      {[0, 1, 2].map(i => (
+        <span key={i} className="text-xl">
+          {i < attemptsLeft ? '❤️' : '🤍'}
+        </span>
+      ))}
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6">
       <div className="absolute inset-0 bg-gradient-to-br from-green-100 via-white to-green-200 bg-opacity-70 backdrop-blur-md transition-opacity duration-300"></div>
@@ -88,6 +99,9 @@ export default function Level2_SD({ onComplete }) {
         <h2 className="text-xl sm:text-2xl font-bold text-center text-green-700 mb-2">
           Level 2: CVC Words
         </h2>
+
+        {isAnswering && renderHearts()}
+
         <p className="text-center text-gray-700 mb-4">
           Listen to the word. Type what you hear.
         </p>
@@ -115,13 +129,6 @@ export default function Level2_SD({ onComplete }) {
         {feedback && (
           <div className="mb-2 text-lg font-semibold text-center text-gray-800">
             {feedback}
-          </div>
-        )}
-
-        {/* ✅ Show attempts only as a subtle indicator */}
-        {isAnswering && (
-          <div className="mb-4 text-sm text-center text-gray-500">
-            Attempts left: {attemptsLeft}
           </div>
         )}
 

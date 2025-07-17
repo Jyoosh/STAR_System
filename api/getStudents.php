@@ -25,9 +25,11 @@ try {
     u.birthday,
     u.age,
     u.grade_level,
+    u.plain_password AS password, -- ✅ Add this line
     ar.total_score AS latest_score,
     ar.reading_level AS latest_level,
-    ar.assessed_at AS last_assessed_at
+    ar.assessed_at AS last_assessed_at,
+    ar.assessment_type AS latest_assessment_type
   FROM users u
   LEFT JOIN (
     SELECT ar1.*
@@ -44,14 +46,13 @@ try {
     AND u.teacher_id = ?
     AND (u.is_deleted IS NULL OR u.is_deleted = 0)
   ORDER BY u.surname ASC
-";
-
+  ";
 
   $stmt = $pdo->prepare($sql);
   $stmt->execute([$teacher_id]);
   $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-  // Optional: filter out any true duplicate user_ids in case of bad data
+  // Optional: filter out duplicates
   $seen = [];
   $uniqueStudents = array_filter($students, function ($s) use (&$seen) {
     if (isset($seen[$s['user_id']])) return false;

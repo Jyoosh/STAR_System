@@ -349,9 +349,10 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
 
         return (
           <div className="text-center space-y-4">
-            <h2 className="text-xl font-bold text-green-600">
+            <h2 className="text-xl font-bold text-green-600 font-sans" style={{ fontFamily: 'Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif' }}>
               🎉 Level {levelResult.level} Complete!
             </h2>
+
             <p>You got a perfect score and can now proceed to the next level.</p>
             <div className="flex gap-4 mt-6">
               <button
