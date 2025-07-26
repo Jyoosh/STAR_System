@@ -8,7 +8,7 @@ ob_start();
 
 // CORS & JSON headers
 header('Content-Type: application/json; charset=utf-8');
-$origin  = $_SERVER['HTTP_ORIGIN'] ?? '';
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 $allowed = ['http://localhost:3000'];
 if (in_array($origin, $allowed, true)) {
   header("Access-Control-Allow-Origin: $origin");
@@ -25,14 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 try {
   // Load PDO connection
   $dbPath = __DIR__ . '/db_connection.php';
-  if (! file_exists($dbPath)) {
+  if (!file_exists($dbPath)) {
     throw new Exception("db_connection.php not found at $dbPath");
   }
   require_once $dbPath;  // defines $pdo
 
   // Decode payload
   $input = json_decode(file_get_contents('php://input'), true);
-  foreach (['user_id','first_name','surname','password','role'] as $f) {
+  foreach (['user_id', 'first_name', 'surname', 'password', 'role'] as $f) {
     if (empty($input[$f])) {
       http_response_code(400);
       throw new Exception("Missing required field: $f");
@@ -70,37 +70,41 @@ try {
 
   // Insert new user
 // Insert new user
-$sql = "INSERT INTO users
-          (record_id, user_id, first_name, middle_name, surname,
-           email, password_hash, role, teacher_id, student_id,
-           gender, birthday, age, grade_level)
-        VALUES
-          (:record_id, :user_id, :first_name, :middle_name, :surname,
-           :email, :password_hash, :role, :teacher_id, :student_id,
-           :gender, :birthday, :age, :grade_level)";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([
-  ':record_id'     => $input['user_id'],
-  ':user_id'       => $input['user_id'],
-  ':first_name'    => $input['first_name'],
-  ':middle_name'   => $input['middle_name'] ?? null,
-  ':surname'       => $input['surname'],
-  ':email'         => $input['email'],
-  ':password_hash' => $passwordHash,
-  ':role'          => $input['role'],
-  ':teacher_id'    => $teacherFk,
-  ':student_id'    => $input['student_id'] ?? null,
-  ':gender'        => $input['gender'] ?? null,
-  ':birthday'      => $input['birthday'] ?? null,
-  ':age'           => $input['age'] ?? null,
-  ':grade_level'   => $input['grade_level'] ?? null,
-]);
+  $sql = "INSERT INTO users
+        (record_id, user_id, first_name, middle_name, surname,
+         email, password_hash, plain_password, section, role,
+         teacher_id, student_id, gender, birthday, age, grade_level)
+      VALUES
+        (:record_id, :user_id, :first_name, :middle_name, :surname,
+         :email, :password_hash, :plain_password, :section, :role,
+         :teacher_id, :student_id, :gender, :birthday, :age, :grade_level)";
+
+  $stmt = $pdo->prepare($sql);
+  $stmt->execute([
+    ':record_id' => $input['user_id'],
+    ':user_id' => $input['user_id'],
+    ':first_name' => $input['first_name'],
+    ':middle_name' => $input['middle_name'] ?? null,
+    ':surname' => $input['surname'],
+    ':email' => $input['email'],
+    ':password_hash' => $passwordHash,
+    ':plain_password' => $input['password'],        // Storing plaintext (not recommended for production)
+    ':section' => $input['section'] ?? null, // Use optional fallback
+    ':role' => $input['role'],
+    ':teacher_id' => $teacherFk,
+    ':student_id' => $input['student_id'] ?? null,
+    ':gender' => $input['gender'] ?? null,
+    ':birthday' => $input['birthday'] ?? null,
+    ':age' => $input['age'] ?? null,
+    ':grade_level' => $input['grade_level'] ?? null,
+  ]);
+
 
 
 
   echo json_encode([
-    'success'   => true,
-    'insert_id' => (int)$pdo->lastInsertId()
+    'success' => true,
+    'insert_id' => (int) $pdo->lastInsertId()
   ]);
 
 } catch (Exception $e) {

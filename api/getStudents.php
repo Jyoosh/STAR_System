@@ -25,7 +25,8 @@ try {
     u.birthday,
     u.age,
     u.grade_level,
-    u.plain_password AS password, -- ✅ Add this line
+    u.section, 
+    u.plain_password AS password,
     ar.total_score AS latest_score,
     ar.reading_level AS latest_level,
     ar.assessed_at AS last_assessed_at,

@@ -75,15 +75,38 @@ export default function AdminPanel() {
     }
   };
 
+  const calculateAge = birthday => {
+    if (!birthday) return '';
+    const today = new Date();
+    const birthDate = new Date(birthday);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+
   const applyFilters = list =>
     list.filter(u => {
       if (roleFilter && u.role !== roleFilter) return false;
       const q = searchTerm.toLowerCase();
       return (
-        u.user_id.toLowerCase().includes(q) ||
+        u.user_id?.toLowerCase().includes(q) ||
         u.teacher_user_id?.toLowerCase().includes(q) ||
-        u.first_name.toLowerCase().includes(q) ||
-        u.surname.toLowerCase().includes(q)
+        u.first_name?.toLowerCase().includes(q) ||
+        u.middle_name?.toLowerCase().includes(q) ||
+        u.surname?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q) ||
+        u.gender?.toLowerCase().includes(q) ||
+        u.birthday?.toLowerCase().includes(q) ||
+        calculateAge(u.birthday).toString().includes(q) ||
+        u.grade_level?.toLowerCase().includes(q) ||
+        u.section?.toLowerCase().includes(q) ||
+        u.last_assessed_at?.toLowerCase().includes(q) ||
+        u.total_score?.toString().includes(q) ||
+        u.assessment_type?.toLowerCase().includes(q)
       );
     });
 
@@ -114,54 +137,54 @@ export default function AdminPanel() {
       </div>
 
       {/* Stats and Add */}
-<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-  <div className="flex gap-4">
-    <div className="bg-[#C6E90E]/20 px-3 py-2 rounded text-[#295A12] font-semibold">
-      Teachers: {counts.Teacher}
-    </div>
-    <div className="bg-[#C6E90E]/20 px-3 py-2 rounded text-[#295A12] font-semibold">
-      Students: {counts.Student}
-    </div>
-  </div>
-  <div className="flex justify-end w-full sm:w-auto">
-    <button
-      onClick={() => setShowModal(true)}
-      className="bg-[#295A12] hover:bg-[#398908] text-white px-4 py-2 rounded w-full sm:w-auto transition"
-    >
-      Add User
-    </button>
-  </div>
-</div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex gap-4">
+          <div className="bg-[#C6E90E]/20 px-3 py-2 rounded text-[#295A12] font-semibold">
+            Teachers: {counts.Teacher}
+          </div>
+          <div className="bg-[#C6E90E]/20 px-3 py-2 rounded text-[#295A12] font-semibold">
+            Students: {counts.Student}
+          </div>
+        </div>
+        <div className="flex justify-end w-full sm:w-auto">
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-[#295A12] hover:bg-[#398908] text-white px-4 py-2 rounded w-full sm:w-auto transition"
+          >
+            Add User
+          </button>
+        </div>
+      </div>
 
 
       {/* Carousel Manager */}
       <CarouselManager />
 
-{/* Filters */}
-<div className="flex flex-col lg:flex-row flex-wrap items-stretch gap-4 mb-6">
-  <input
-    type="text"
-    placeholder="Search by name, User ID, or Teacher ID"
-    value={searchTerm}
-    onChange={e => setSearchTerm(e.target.value)}
-    className="p-2 border border-[#87DC3F] rounded flex-1 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-[#C6E90E]"
-  />
-  <select
-    value={roleFilter}
-    onChange={e => setRoleFilter(e.target.value)}
-    className="p-2 border border-[#87DC3F] rounded w-full sm:w-40 focus:outline-none focus:ring-2 focus:ring-[#C6E90E]"
-  >
-    <option value="">All Roles</option>
-    <option value="Teacher">Teacher</option>
-    <option value="Student">Student</option>
-  </select>
-  <button
-    onClick={exportCSV}
-    className="bg-[#87DC3F] hover:bg-[#C6E90E] text-[#295A12] px-4 py-2 rounded w-full sm:w-auto font-semibold transition"
-  >
-    Export CSV
-  </button>
-</div>
+      {/* Filters */}
+      <div className="flex flex-col lg:flex-row flex-wrap items-stretch gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Search by name, User ID, or Teacher ID"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="p-2 border border-[#87DC3F] rounded flex-1 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-[#C6E90E]"
+        />
+        <select
+          value={roleFilter}
+          onChange={e => setRoleFilter(e.target.value)}
+          className="p-2 border border-[#87DC3F] rounded w-full sm:w-40 focus:outline-none focus:ring-2 focus:ring-[#C6E90E]"
+        >
+          <option value="">All Roles</option>
+          <option value="Teacher">Teacher</option>
+          <option value="Student">Student</option>
+        </select>
+        <button
+          onClick={exportCSV}
+          className="bg-[#87DC3F] hover:bg-[#C6E90E] text-[#295A12] px-4 py-2 rounded w-full sm:w-auto font-semibold transition"
+        >
+          Export CSV
+        </button>
+      </div>
 
 
       {/* User Table */}
@@ -171,7 +194,9 @@ export default function AdminPanel() {
           deletedUsers={filteredDeleted}
           onDelete={handleDelete}
           onRestore={handleRestore}
+          setUsers={setUsers}
         />
+
       </div>
 
       {/* Add User Modal */}

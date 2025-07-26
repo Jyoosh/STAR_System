@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once __DIR__ . '/db_connection.php'; // defines $pdo
+require_once __DIR__ . '/db_connection.php';
 
 $roleFilter = $_GET['role'] ?? '';
 $q = $_GET['q'] ?? '';
@@ -35,18 +35,31 @@ function fetchUsers($pdo, $is_deleted, $roleFilter, $q) {
             u.middle_name,
             u.surname,
             u.email,
-            u.plain_password AS password,  -- show actual password
+            u.plain_password AS password,
             u.gender,
             u.birthday,
             u.grade_level,
+            u.section,
             u.role,
             u.teacher_id,
             t.user_id AS teacher_user_id,
             u.is_deleted,
             u.created_at,
-            u.updated_at
+            u.updated_at,
+            ar.assessed_at AS last_assessed_at,
+            ar.total_score,
+            ar.assessment_type
         FROM users u
         LEFT JOIN users t ON u.teacher_id = t.id
+        LEFT JOIN (
+            SELECT ar1.*
+            FROM assessment_results ar1
+            INNER JOIN (
+                SELECT student_id, MAX(assessed_at) AS latest
+                FROM assessment_results
+                GROUP BY student_id
+            ) ar2 ON ar1.student_id = ar2.student_id AND ar1.assessed_at = ar2.latest
+        ) ar ON ar.student_id = u.id
         WHERE u.role IN ('Teacher', 'Student')
           AND u.is_deleted = :is_deleted
     ";

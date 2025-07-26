@@ -21,6 +21,7 @@ export default function TeacherPanel() {
   const [sortBy,] = useState('');
   const [gradeFilter, setGradeFilter] = useState('');
   const [genderFilter, setGenderFilter] = useState('');
+  const [sectionFilter, setSectionFilter] = useState('');
 
 
 
@@ -89,7 +90,6 @@ export default function TeacherPanel() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this student?')) return;
     try {
       const res = await fetch(`${API}/deleteUser.php`, {
         method: 'POST',
@@ -119,24 +119,59 @@ export default function TeacherPanel() {
 
   const uniqueGrades = Array.from(new Set(students.map((s) => s.grade_level).filter(Boolean))).sort();
 
+  const uniqueSections = Array.from(new Set(students.map((s) => s.section).filter(Boolean))).sort();
+
+
   const gradeCounts = uniqueGrades.map((grade) => {
     const count = students.filter((s) => s.grade_level === grade).length;
     return { grade, count };
   });
 
-  // Filter and sort students
-  const filteredStudents = students
-    .filter((s) =>
-      [s.first_name, s.surname, s.user_id]
-        .some((field) => field?.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
-    .filter((s) => (gradeFilter ? s.grade_level === gradeFilter : true))
-    .filter((s) => (genderFilter ? s.gender === genderFilter : true))
-    .sort((a, b) => {
-      if (sortBy === 'age') return (a.age ?? 0) - (b.age ?? 0);
-      if (sortBy === 'grade') return (a.grade_level || '').localeCompare(b.grade_level || '', undefined, { numeric: true });
-      return 0;
-    });
+  const calculateAge = (birthday) => {
+    if (!birthday) return '';
+    const today = new Date();
+    const birthDate = new Date(birthday);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const filterStudents = () => {
+    const q = searchTerm.toLowerCase();
+
+    return students
+      .filter((s) => {
+        return (
+          s.first_name?.toLowerCase().includes(q) ||
+          s.middle_name?.toLowerCase().includes(q) ||
+          s.surname?.toLowerCase().includes(q) ||
+          s.user_id?.toLowerCase().includes(q) ||
+          s.email?.toLowerCase().includes(q) ||
+          s.gender?.toLowerCase().includes(q) ||
+          s.birthday?.toLowerCase().includes(q) ||
+          calculateAge(s.birthday)?.toString().includes(q) ||
+          s.grade_level?.toLowerCase().includes(q) ||
+          s.section?.toLowerCase().includes(q) ||
+          s.last_assessed_at?.toLowerCase().includes(q) ||
+          s.total_score?.toString().includes(q) ||
+          s.assessment_type?.toLowerCase().includes(q)
+        );
+      })
+      .filter((s) => (genderFilter ? s.gender === genderFilter : true))
+      .filter((s) => (gradeFilter ? s.grade_level === gradeFilter : true))
+      .filter((s) => (sectionFilter ? s.section === sectionFilter : true))
+      .sort((a, b) => {
+        if (sortBy === 'age') return (a.age ?? 0) - (b.age ?? 0);
+        if (sortBy === 'grade') return (a.grade_level || '').localeCompare(b.grade_level || '', undefined, { numeric: true });
+        return 0;
+      });
+  };
+
+  const filteredStudents = filterStudents();
+
 
 
 
@@ -206,7 +241,25 @@ export default function TeacherPanel() {
             ))}
           </select>
         </div>
+
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1">Filter by Section:</label>
+          <select
+            value={sectionFilter}
+            onChange={(e) => setSectionFilter(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          >
+            <option value="">All Sections</option>
+            {uniqueSections.map((section) => (
+              <option key={section} value={section}>
+                {section}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
+
 
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
@@ -223,7 +276,7 @@ export default function TeacherPanel() {
               className={`cursor-pointer px-2 py-1 rounded-md hover:bg-gray-100 transition-colors ${grade === gradeFilter ? 'text-green-800 font-semibold' : 'text-gray-700'}`}
               onClick={() => setGradeFilter(grade)}
             >
-              Grade {grade}: <span className="font-medium text-red-500">{count}</span>
+              {grade}: <span className="font-medium text-red-500">{count}</span>
             </div>
           ))}
         </div>
@@ -289,7 +342,10 @@ export default function TeacherPanel() {
         <EditStudentModal
           student={selectedStudent}
           onClose={() => setShowEditModal(false)}
-          onSave={loadStudents}
+          onSave={async () => {
+            await loadStudents();              // ⬅️ Wait for fetch to complete
+            setShowEditModal(false);          // ⬅️ Then close the modal
+          }}
         />
       )}
     </div>

@@ -1,14 +1,17 @@
 // src/components/Admin/UserList.js
 import React, { useState, useMemo } from 'react';
-import { GraduationCap, BookUser, Trash2, RefreshCw } from 'lucide-react';
+import { GraduationCap, BookUser, Trash2, RefreshCw, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
+import EditUserModal from './EditUserModal';
+
 
 
 export default function UserList({
   users = [],
   deletedUsers = [],
   onDelete,
-  onRestore
+  onRestore,
+  setUsers
 }) {
   const [sortBy, setSortBy] = useState({ key: 'user_id', asc: true });
   const [activeTab, setActiveTab] = useState('active');
@@ -17,6 +20,9 @@ export default function UserList({
   const [confirmAction, setConfirmAction] = useState({ id: null, action: '' });
   const pageSize = 10;
   const [visiblePasswords, setVisiblePasswords] = useState({});
+  const [expandedCards, setExpandedCards] = useState({});
+  const [editUser, setEditUser] = useState(null);
+
 
 
   const displayUsers = activeTab === 'active' ? users : deletedUsers;
@@ -57,6 +63,17 @@ export default function UserList({
     );
 
   if (!users.length && !deletedUsers.length) return <p>No users available.</p>;
+
+  const calculateAge = (dob) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   return (
     <>
@@ -129,15 +146,12 @@ export default function UserList({
                   {sortBy.key === 'surname' && <span className="ml-1">{sortBy.asc ? '↑' : '↓'}</span>}
                 </div>
               </th>
-              {/* <th
-                className="p-2 border cursor-pointer"
-                onClick={() => setSortBy(s => ({ key: 'email', asc: s.key === 'email' ? !s.asc : true }))}
-              >
-                <div className="flex items-center">
-                  Email
-                  {sortBy.key === 'email' && <span className="ml-1">{sortBy.asc ? '↑' : '↓'}</span>}
-                </div>
-              </th> */}
+
+              {/* ✅ New Columns */}
+              <th className="p-2 border">Gender</th>
+              <th className="p-2 border">Birthday / Age</th>
+              <th className="p-2 border">Grade / Section</th>
+              <th className="p-2 border">Last Assessed / Score</th>
 
               <th
                 className="p-2 border cursor-pointer"
@@ -149,10 +163,10 @@ export default function UserList({
                 </div>
               </th>
 
-
               <th className="p-2 border">Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {paged.map(u => (
               <tr key={u.id} className={`border-b ${activeTab === 'deleted' ? 'bg-red-50' : 'hover:bg-gray-50'}`}>
@@ -170,12 +184,26 @@ export default function UserList({
                     <span className="ml-2 text-xs text-red-600">(Deleted)</span>
                   )}
                 </td>
-                <td className="p-2 whitespace-nowrap">
-                  {u.teacher_user_id || '-'}
-                </td>
+                <td className="p-2 whitespace-nowrap">{u.teacher_user_id || '-'}</td>
                 <td className="p-2">
                   {u.first_name} {u.middle_name ? `${u.middle_name} ` : ''}{u.surname}
                 </td>
+
+                {/* ✅ New Fields */}
+                <td className="p-2 whitespace-nowrap">{u.gender || '-'}</td>
+                <td className="p-2 whitespace-nowrap">
+                  {u.birthday ? `${u.birthday} (${calculateAge(u.birthday)} yrs)` : '-'}
+                </td>
+                <td className="p-2 whitespace-nowrap">
+                  {u.grade_level || '-'} / {u.section || '-'}
+                </td>
+                <td className="p-2 whitespace-nowrap">
+                  {u.last_assessed_at ? new Date(u.last_assessed_at).toLocaleString() : '-'}
+                  <br />
+                  <span className="text-sm text-gray-600">Score: {u.total_score ?? '-'}</span>
+                </td>
+
+
                 <td className="p-2 whitespace-nowrap">
                   {visiblePasswords[u.id] ? u.password : '•••••••'}
                   <button
@@ -188,8 +216,130 @@ export default function UserList({
                   </button>
                 </td>
 
-                {/* <td className="p-2">{u.email}</td> */}
                 <td className="p-2 space-x-2">
+                  {activeTab === 'active' ? (
+                    <>
+                      <button
+                        onClick={() => setEditUser(u)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit user"
+                      >
+                        <Pencil size={18} />
+                      </button>
+                      <button
+                        onClick={() => setConfirmAction({ id: u.id, action: 'delete' })}
+                        className="text-red-600 hover:text-red-800"
+                        title="Delete user"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmAction({ id: u.id, action: 'restore' })}
+                      className="text-green-600 hover:text-green-800"
+                      title="Restore user"
+                    >
+                      <RefreshCw size={18} />
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+
+        </table>
+      </div>
+
+      {/* Mobile Card View with Toggle */}
+      <div className="sm:hidden space-y-4">
+        {paged.map(u => {
+          const age = u.birthday
+            ? Math.floor((new Date() - new Date(u.birthday)) / (365.25 * 24 * 60 * 60 * 1000))
+            : null;
+
+          const isExpanded = expandedCards[u.id] || false;
+
+          return (
+            <div
+              key={u.id}
+              className={`border rounded p-4 shadow-sm ${activeTab === 'deleted' ? 'bg-red-50' : 'bg-white'}`}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="font-semibold flex items-center">
+                    <RoleIcon role={u.role} />
+                    <span className="ml-1">
+                      {u.first_name} {u.surname}
+                      {activeTab === 'deleted' && (
+                        <span className="ml-2 text-xs text-red-600">(Deleted)</span>
+                      )}
+                    </span>
+                  </h3>
+                  <p className="text-sm text-gray-600">Record ID: {u.record_id}</p>
+                  <p className="text-sm text-gray-600">User ID: {u.user_id}</p>
+
+                  <button
+                    onClick={() =>
+                      setExpandedCards(prev => ({
+                        ...prev,
+                        [u.id]: !prev[u.id],
+                      }))
+                    }
+                    className="text-blue-600 hover:underline text-sm mt-2"
+                  >
+                    {isExpanded ? 'Show Less ▲' : 'Show More ▼'}
+                  </button>
+
+                  {isExpanded && (
+                    <div className="mt-2 space-y-1">
+                      {u.teacher_user_id && (
+                        <p className="text-sm text-gray-600">Teacher ID: {u.teacher_user_id}</p>
+                      )}
+                      <p className="text-sm text-gray-600">
+                        Password: {visiblePasswords[u.id] ? u.password : '•••••••'}
+                        <button
+                          onClick={() =>
+                            setVisiblePasswords(prev => ({ ...prev, [u.id]: !prev[u.id] }))
+                          }
+                          className="ml-2 text-blue-600 hover:underline text-xs"
+                        >
+                          {visiblePasswords[u.id] ? 'Hide' : 'Show'}
+                        </button>
+                      </p>
+                      {u.gender && (
+                        <p className="text-sm text-gray-600">Gender: {u.gender}</p>
+                      )}
+                      {u.birthday && (
+                        <p className="text-sm text-gray-600">
+                          Birthday & Age: {u.birthday} ({age} years old)
+                        </p>
+                      )}
+                      {(u.grade_level || u.section) && (
+                        <p className="text-sm text-gray-600">
+                          Grade & Section: {u.grade_level || '-'} ({u.section || ''})
+                        </p>
+                      )}
+                      {(u.last_assessed_at || u.total_score !== null) && (
+                        <p className="text-sm text-gray-600">
+                          Last Assessed: {u.last_assessed_at ? new Date(u.last_assessed_at).toLocaleString() : '-'} | Score: {u.total_score ?? '-'}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  {/* ✏️ Edit button - consistent icon */}
+                  <button
+                    onClick={() => setEditUser(u)}
+                    className="text-blue-600 hover:text-blue-800"
+                    title="Edit user"
+                  >
+                    <Pencil size={18} />
+                  </button>
+
+                  {/* 🗑️ Delete or ♻️ Restore based on tab */}
                   {activeTab === 'active' ? (
                     <button
                       onClick={() => setConfirmAction({ id: u.id, action: 'delete' })}
@@ -207,73 +357,27 @@ export default function UserList({
                       <RefreshCw size={18} />
                     </button>
                   )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile Card View */}
-      <div className="sm:hidden space-y-4">
-        {paged.map(u => (
-          <div
-            key={u.id}
-            className={`border rounded p-4 shadow-sm ${activeTab === 'deleted' ? 'bg-red-50' : 'bg-white'}`}
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <h3 className="font-semibold flex items-center">
-                  <RoleIcon role={u.role} />
-                  <span className="ml-1">
-                    {u.first_name} {u.surname}
-                    {activeTab === 'deleted' && (
-                      <span className="ml-2 text-xs text-red-600">(Deleted)</span>
-                    )}
-                  </span>
-                </h3>
-                <p className="text-sm text-gray-600">Record ID: {u.record_id}</p>
-                <p className="text-sm text-gray-600">User ID: {u.user_id}</p>
-                {u.teacher_user_id && (
-                  <p className="text-sm text-gray-600">Teacher ID: {u.teacher_user_id}</p>
-                )}
-                <p className="text-sm text-gray-600">
-                  Password: {visiblePasswords[u.id] ? u.password : '•••••••'}
-                  <button
-                    onClick={() =>
-                      setVisiblePasswords(prev => ({ ...prev, [u.id]: !prev[u.id] }))
-                    }
-                    className="ml-2 text-blue-600 hover:underline text-xs"
-                  >
-                    {visiblePasswords[u.id] ? 'Hide' : 'Show'}
-                  </button>
-                </p>
-
-              </div>
-              <div>
-                {activeTab === 'active' ? (
-                  <button
-                    onClick={() => setConfirmAction({ id: u.id, action: 'delete' })}
-                    className="text-red-600 hover:text-red-800"
-                    title="Delete user"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setConfirmAction({ id: u.id, action: 'restore' })}
-                    className="text-green-600 hover:text-green-800"
-                    title="Restore user"
-                  >
-                    <RefreshCw size={18} />
-                  </button>
-                )}
+                </div>
               </div>
             </div>
-            {/* <p className="text-sm"><strong>Email:</strong> {u.email}</p> */}
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Edit User Modal */}
+      {editUser && (
+        <EditUserModal
+          user={editUser}
+          onClose={() => setEditUser(null)}
+          onUserUpdated={(updatedUser) => {
+            setUsers(prev =>
+              prev.map(u => (u.id === updatedUser.id ? { ...u, ...updatedUser } : u))
+            );
+            toast.success(`User ${updatedUser.user_id} updated.`);
+            setEditUser(null);
+          }}
+        />
+      )}
 
       {/* Pagination */}
       <div className="flex justify-between items-center mt-4">

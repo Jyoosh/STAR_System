@@ -17,6 +17,7 @@ export default function AddStudentModal({ teacherId, onClose }) {
     birthday: '',
     age: '',
     grade_level: '',
+    section: '',
   });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -137,6 +138,7 @@ export default function AddStudentModal({ teacherId, onClose }) {
           birthday: formData.birthday,
           age: formData.age,
           grade_level: formData.grade_level,
+          section: formData.section.trim(),
         }),
       });
 
@@ -273,19 +275,29 @@ export default function AddStudentModal({ teacherId, onClose }) {
     className="p-2 border"
     required
   /> */}
-<select
-  name="grade_level"
-  value={formData.grade_level}
-  onChange={handleChange}
-  className="p-2 border"
-  required
->
-  <option value="">Select Grade Level</option>
-  <option value="Grade 7">Grade 7</option>
-  <option value="Grade 8">Grade 8</option>
-  <option value="Grade 9">Grade 9</option>
-  <option value="Grade 10">Grade 10</option>
-</select>
+              <select
+                name="grade_level"
+                value={formData.grade_level}
+                onChange={handleChange}
+                className="p-2 border"
+                required
+              >
+                <option value="">Select Grade Level</option>
+                <option value="Grade 7">Grade 7</option>
+                <option value="Grade 8">Grade 8</option>
+                <option value="Grade 9">Grade 9</option>
+                <option value="Grade 10">Grade 10</option>
+              </select>
+
+              <input
+                name="section"
+                type="text"
+                placeholder="Section"
+                value={formData.section}
+                onChange={handleChange}
+                className="p-2 border"
+                required
+              />
 
             </div>
 

@@ -1,9 +1,9 @@
 <?php
-// api/editUser.php
+require_once 'cors.php';
 require __DIR__ . '/db_connection.php';
 require __DIR__ . '/bootstrap.php';
-
-ini_set('display_errors', 1); // Enable during development
+// api/editUser.php
+ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
@@ -62,7 +62,6 @@ try {
     $params[':plain_password'] = $input['password'];
   }
 
-
   if (isset($input['gender'])) {
     $fields[] = 'gender = :gender';
     $params[':gender'] = trim($input['gender']);
@@ -83,6 +82,11 @@ try {
     $params[':grade_level'] = trim($input['grade_level']);
   }
 
+  if (isset($input['section'])) {
+    $fields[] = 'section = :section';
+    $params[':section'] = trim($input['section']);
+  }
+
   if (empty($fields)) {
     http_response_code(400);
     echo json_encode(['error' => 'No valid fields to update']);
@@ -92,14 +96,13 @@ try {
   $params[':user_id'] = $userId;
   $sql = "UPDATE users SET " . implode(', ', $fields) . ", updated_at = NOW() WHERE user_id = :user_id";
 
-  // --- Safe SQL logging (mask password) ---
+  // Safe SQL logging (mask password)
   $logParams = $params;
   if (isset($logParams[':password_hash'])) {
     $logParams[':password_hash'] = '[HIDDEN]';
   }
   error_log("EDIT USER SQL: $sql");
   error_log("EDIT USER PARAMS: " . json_encode($logParams));
-  // ----------------------------------------
 
   $stmt = $pdo->prepare($sql);
   $stmt->execute($params);
@@ -110,7 +113,6 @@ try {
   echo json_encode([
     'error' => 'Failed to update user',
     'details' => $e->getMessage(),
-    'trace' => $e->getTraceAsString() // optional: very verbose
+    'trace' => $e->getTraceAsString()
   ]);
 }
-

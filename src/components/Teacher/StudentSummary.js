@@ -19,7 +19,8 @@ export default function StudentSummary({
   onEdit
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // 👈 for toggling password
+  const [showPassword, setShowPassword] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const {
     user_id,
@@ -33,12 +34,13 @@ export default function StudentSummary({
     latest_score,
     latest_level,
     last_assessed_at,
-    password // 👈 ensure this is passed from student object
+    password,
+    section
   } = student;
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-    return isNaN(date) ? '' : date.toLocaleDateString('en-US', {
+    return isNaN(date) ? 'Invalid Date' : date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -86,7 +88,10 @@ export default function StudentSummary({
             <Pencil size={16} /> Edit
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onDelete(user_id); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteConfirm(true);
+            }}
             className="flex items-center gap-1 bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 text-sm"
           >
             <Trash2 size={16} /> Delete
@@ -94,13 +99,14 @@ export default function StudentSummary({
         </div>
       </div>
 
-      {/* Expanded details */}
+      {/* Expanded Details */}
       {expanded && (
         <div className="mt-4 text-sm text-gray-700 space-y-1 pl-1">
           <p><strong>Gender:</strong> {gender || 'N/A'}</p>
           <p><strong>Birthday:</strong> {birthday ? formatDate(birthday) : 'N/A'}</p>
           <p><strong>Age:</strong> {age !== undefined ? age : 'N/A'}</p>
           <p><strong>Grade Level:</strong> {grade_level || 'N/A'}</p>
+          <p><strong>Section:</strong> {section || 'N/A'}</p>
           <p>
             <strong>Last Assessed:</strong>{' '}
             {last_assessed_at ? (
@@ -111,10 +117,10 @@ export default function StudentSummary({
           </p>
           <p>
             <strong>Latest Score:</strong>{' '}
-            {latest_score !== undefined ? (
+            {latest_score !== undefined && latest_score !== null ? (
               <>
                 <span className="text-blue-700 font-semibold">{latest_score}/40</span>{' '}
-                | Level: <span className="text-purple-700 font-semibold">{latest_level}</span>
+                | Level: <span className="text-purple-700 font-semibold">{latest_level || 'N/A'}</span>
               </>
             ) : (
               <em className="text-gray-400">No scores yet</em>
@@ -133,6 +139,35 @@ export default function StudentSummary({
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </p>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full">
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Confirm Deletion</h2>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete <strong>{first_name} {surname}</strong>?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  onDelete(user_id);
+                  setShowDeleteConfirm(false);
+                }}
+                className="px-4 py-2 text-sm text-white bg-red-500 rounded hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

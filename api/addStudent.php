@@ -1,10 +1,12 @@
 <?php
 // File: api/addStudent.php
+require_once 'cors.php';
 require 'db_connection.php';
 require __DIR__ . '/bootstrap.php';
 
 header('Content-Type: application/json');
 
+// Decode JSON input
 $data = json_decode(file_get_contents('php://input'), true);
 if (!$data) {
   http_response_code(400);
@@ -29,7 +31,7 @@ $first_name      = trim($data['first_name']);
 $middle_name     = $data['middle_name'] ?? null;
 $surname         = trim($data['surname']);
 $email           = $data['email'] ?? null;
-$password        = $data['password'];
+$password        = trim($data['password']);
 $role            = trim($data['role']);
 $teacher_user_id = $data['teacher_id'] ?? null;
 $student_id      = $data['student_id'] ?? null;
@@ -38,8 +40,12 @@ $gender          = $data['gender'] ?? null;
 $birthday        = $data['birthday'] ?? null;
 $age             = isset($data['age']) ? (int) $data['age'] : null;
 $grade_level     = $data['grade_level'] ?? null;
+$section         = $data['section'] ?? null;
 
-// Resolve teacher_id if role is student
+// Hash password once
+$password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+// Resolve teacher_id if student
 $teacher_id = null;
 if ($teacher_user_id && $role === 'Student') {
   $stmt = $pdo->prepare("SELECT id, is_deleted FROM users WHERE user_id = ? AND role = 'Teacher'");
@@ -61,7 +67,27 @@ if ($teacher_user_id && $role === 'Student') {
   $teacher_id = $teacher['id'];
 }
 
-// Reuse deleted user if requested
+// Fields used in insert
+$fields = [
+  $record_id,
+  $user_id,
+  $first_name,
+  $middle_name,
+  $surname,
+  $email,
+  $password_hash,
+  $password,       // plain_password
+  $role,
+  $teacher_id,
+  $student_id,
+  $gender,
+  $birthday,
+  $age,
+  $grade_level,
+  $section
+];
+
+// Insert reused deleted user
 if ($is_reusing_deleted) {
   $stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ? AND is_deleted = 1");
   $stmt->execute([$user_id]);
@@ -70,43 +96,26 @@ if ($is_reusing_deleted) {
   if ($deletedUser) {
     try {
       $stmt = $pdo->prepare("
-        UPDATE users SET 
-          first_name = ?, 
-          middle_name = ?, 
-          surname = ?, 
-          email = ?, 
-          password_hash = ?, 
-          plain_password = ?, 
-          role = ?, 
-          teacher_id = ?, 
-          student_id = ?, 
-          gender = ?, 
-          birthday = ?, 
-          age = ?, 
-          grade_level = ?, 
-          is_deleted = 0, 
-          deleted_at = NULL, 
-          updated_at = NOW()
-        WHERE user_id = ?
+        INSERT INTO users (
+          record_id,
+          user_id,
+          first_name,
+          middle_name,
+          surname,
+          email,
+          password_hash,
+          plain_password,
+          role,
+          teacher_id,
+          student_id,
+          gender,
+          birthday,
+          age,
+          grade_level,
+          section
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ");
-
-      $hash = password_hash($password, PASSWORD_DEFAULT);
-      $stmt->execute([
-        $first_name,
-        $middle_name,
-        $surname,
-        $email,
-        $hash,
-        $password,
-        $role,
-        $teacher_id,
-        $student_id,
-        $gender,
-        $birthday,
-        $age,
-        $grade_level,
-        $user_id
-      ]);
+      $stmt->execute($fields);
 
       echo json_encode(['success' => true, 'user_id' => $user_id, 'restored' => true]);
       exit;
@@ -136,27 +145,11 @@ try {
       gender,
       birthday,
       age,
-      grade_level
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      grade_level,
+      section
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   ");
-
-  $stmt->execute([
-    $record_id,
-    $user_id,
-    $first_name,
-    $middle_name,
-    $surname,
-    $email,
-    password_hash($password, PASSWORD_DEFAULT),
-    $password,
-    $role,
-    $teacher_id,
-    $student_id,
-    $gender,
-    $birthday,
-    $age,
-    $grade_level
-  ]);
+  $stmt->execute($fields);
 
   echo json_encode(['success' => true, 'user_id' => $user_id]);
 } catch (PDOException $e) {

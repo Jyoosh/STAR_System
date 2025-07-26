@@ -14,12 +14,43 @@ export default function AddUserModal({
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [surname, setSurname] = useState('');
-  const [email, ] = useState('');
+  // const [email,] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [teacherId, setTeacherId] = useState('');
-  const [studentId, setStudentId] = useState('');
   const [error, setError] = useState(null);
+
+  const [formData, setFormData] = useState({
+    gender: '',
+    birthday: '',
+    age: '',
+    grade_level: '',
+    section: '',
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'birthday') {
+      const today = new Date();
+      const birthDate = new Date(value);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        birthday: value,
+        age: isNaN(age) ? '' : age.toString(),
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+
 
   // Reset userId when role or next IDs change
   useEffect(() => {
@@ -27,7 +58,7 @@ export default function AddUserModal({
     setUserId(next);
   }, [selectedRole, teacherNextId, studentNextId]);
 
-  const userIdPlaceholder = 
+  const userIdPlaceholder =
     selectedRole === 'Teacher' ? 'Format: TCR-1' : 'Format: STD-1';
 
   const SIGNUP_ENDPOINT = `${process.env.REACT_APP_API_BASE}/addStudent.php`;
@@ -36,17 +67,37 @@ export default function AddUserModal({
     e.preventDefault();
     setError(null);
 
-    const payload = {
-      user_id: userId.trim(),
-      first_name: firstName.trim(),
-      middle_name: middleName.trim() || null,
-      surname: surname.trim(),
-      email: email.trim(),
-      password,
-      role: selectedRole,
-      teacher_id: selectedRole === 'Student' ? teacherId.trim() : null,
-      student_id: selectedRole === 'Student' ? studentId.trim() : null
-    };
+    const payload =
+      selectedRole === 'Student'
+        ? {
+          user_id: userId.trim(),
+          first_name: firstName.trim(),
+          middle_name: middleName.trim() || null,
+          surname: surname.trim(),
+          email: `${userId.trim()}@placeholder.com`,
+          password,
+          role: selectedRole,
+          teacher_id: teacherId.trim(),
+          gender: formData.gender,
+          birthday: formData.birthday,
+          age: formData.age,
+          grade_level: formData.grade_level,
+          section: formData.section.trim(),
+        }
+        : {
+          user_id: userId.trim(),
+          first_name: firstName.trim(),
+          middle_name: middleName.trim() || null,
+          surname: surname.trim(),
+          email: `${userId.trim()}@placeholder.com`,
+          password,
+          role: selectedRole,
+          gender: formData.gender,
+          birthday: formData.birthday,
+          age: formData.age,
+        };
+
+
 
     try {
       const res = await fetch(SIGNUP_ENDPOINT, {
@@ -58,7 +109,7 @@ export default function AddUserModal({
 
       const responseText = await res.text();
       let json = null;
-      try { json = JSON.parse(responseText); } catch {}
+      try { json = JSON.parse(responseText); } catch { }
 
       if (!res.ok) {
         throw new Error(json?.error || `Server returned ${res.status}`);
@@ -97,11 +148,10 @@ export default function AddUserModal({
                 key={role}
                 type="button"
                 onClick={() => setSelectedRole(role)}
-                className={`flex-1 py-2 text-center ${
-                  selectedRole === role
-                    ? 'border-b-2 border-blue-600 font-semibold'
-                    : 'text-gray-600'
-                }`}
+                className={`flex-1 py-2 text-center ${selectedRole === role
+                  ? 'border-b-2 border-blue-600 font-semibold'
+                  : 'text-gray-600'
+                  }`}
               >
                 {role}
               </button>
@@ -207,14 +257,97 @@ export default function AddUserModal({
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              {/* <p className="text-xs text-gray-500 mt-1">
                 Password will be securely hashed before storage.
-              </p>
+              </p> */}
             </div>
+
+            {selectedRole === 'Teacher' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    className="w-full p-2 border"
+                    required
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <input
+                    type="date"
+                    name="birthday"
+                    value={formData.birthday}
+                    onChange={handleChange}
+                    className="w-full p-2 border"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
 
             {/* Student-specific fields */}
             {selectedRole === 'Student' && (
               <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      className="w-full p-2 border"
+                      required
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <input
+                      type="date"
+                      name="birthday"
+                      value={formData.birthday}
+                      onChange={handleChange}
+                      className="w-full p-2 border"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <select
+                    name="grade_level"
+                    value={formData.grade_level}
+                    onChange={handleChange}
+                    className="p-2 border"
+                    required
+                  >
+                    <option value="">Select Grade Level</option>
+                    <option value="Grade 7">Grade 7</option>
+                    <option value="Grade 8">Grade 8</option>
+                    <option value="Grade 9">Grade 9</option>
+                    <option value="Grade 10">Grade 10</option>
+                  </select>
+
+                  <input
+                    name="section"
+                    type="text"
+                    placeholder="Section"
+                    value={formData.section}
+                    onChange={handleChange}
+                    className="p-2 border"
+                    required
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Teacher ID
@@ -228,21 +361,9 @@ export default function AddUserModal({
                     required
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Student ID <span className="text-xs text-gray-500">(future use)</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter Actual Student ID or leave blank"
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    className="w-full p-2 border"
-                  />
-                </div>
               </>
             )}
+
 
             {/* Error message */}
             {error && <p className="text-red-600">{error}</p>}
