@@ -2,18 +2,17 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Confetti from 'react-confetti';
 
 const cvcWords = [
-  { word: 'bag', context: 'Say "bag" as in "the bag is heavy."' },
+  { word: 'bag', context: 'Say "bag" as in "The bag is heavy."' },
   { word: 'bed', context: 'Say "bed" as in "I sleep in the bed."' },
   { word: 'kid', context: 'Say "kid" as in "The kid is playing."' },
   { word: 'log', context: 'Say "log" as in "The log is in the fire."' },
   { word: 'rub', context: 'Say "rub" as in "Rub your hands."' },
+  { word: 'cat', context: 'Say "cat" as in "The cat is on the mat."' },
   { word: 'red', context: 'Say "red" as in "The apple is red."' },
-  { word: 'fin', context: 'Say "fin" as in "The fish has a fin."' },
-  { word: 'pen', context: 'Say "pen" as in "Write with a pen."' },
-  { word: 'hop', context: 'Say "hop" as in "The frog will hop."' },
+  { word: 'win', context: 'Say "win" as in "I want to win the game."' },
+  { word: 'cop', context: 'Say "cop" as in "The cop wears a badge."' },
   { word: 'tub', context: 'Say "tub" as in "I sit in the tub."' }
 ];
-
 
 export default function Level2({ onComplete, debugAutoPass }) {
   const [words, setWords] = useState([]);
@@ -192,6 +191,23 @@ export default function Level2({ onComplete, debugAutoPass }) {
       {showConfetti && <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />}
       <div className="w-full sm:max-w-lg md:max-w-xl bg-white shadow-xl rounded-lg space-y-4 p-4 sm:p-6 md:p-8">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-700">Level 2: Sound Rangers</h2>
+
+        <div className="flex justify-center items-center gap-2 mb-2">
+          <div className="relative group">
+            <button className="text-blue-700 text-lg font-bold cursor-pointer" title="View instructions">ℹ️</button>
+            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <p><strong>Instructions:</strong></p>
+              <ul className="list-disc list-inside">
+                <li>Say the word you see on screen.</li>
+                <li>You have 3 lives for each word.</li>
+                <li>After 3 incorrect attempts, it skips to the next word.</li>
+                <li>Get all 10 correct to pass the level!</li>
+              </ul>
+            </div>
+          </div>
+          <span className="text-sm text-gray-600 text-center">Say each word clearly when it appears.</span>
+        </div>
+
 
         {completed ? (
           <div className="text-center text-lg text-green-700">

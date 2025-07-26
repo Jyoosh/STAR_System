@@ -5,18 +5,19 @@ import Confetti from 'react-confetti';
 const dingSound = '/assets/audio/sound_effects/ding.mp3';
 const incorrectSound = '/assets/audio/sound_effects/incorrect.mp3';
 
-const diphthongWords = [
-  { word: 'boat', context: 'the ____ floats' },
-  { word: 'cloud', context: 'white ____' },
-  { word: 'brown', context: '____ bear' },
-  { word: 'coin', context: 'drop a ____' },
-  { word: 'loud', context: 'very ____ noise' },
-  { word: 'toast', context: 'buttered ____' },
-  { word: 'soil', context: 'plant in the ____' },
-  { word: 'chair', context: 'sit on the ____' },
-  { word: 'mouse', context: 'a small ____ ran' },
-  { word: 'boil', context: '____ the water' }
+const ccvcWords = [
+  { word: 'blog', context: 'Write a new ____ online.' },
+  { word: 'club', context: 'He joined a reading ____.' },
+  { word: 'flag', context: 'Wave the ____ in the air.' },
+  { word: 'plan', context: 'We made a ____ for the trip.' },
+  { word: 'shot', context: 'He took a ____ at the goal.' },
+  { word: 'snap', context: 'Hear the stick ____ in two.' },
+  { word: 'swim', context: 'Let’s ____ in the pool.' },
+  { word: 'blur', context: 'It looked like a ____ on the screen.' },
+  { word: 'clam', context: 'A ____ lives in a shell.' },
+  { word: 'flop', context: 'The fish did a big ____.' }
 ];
+
 
 
 export default function Level3({ onComplete }) {
@@ -39,7 +40,7 @@ export default function Level3({ onComplete }) {
   const current = words[idx];
 
   useEffect(() => {
-    const shuffled = diphthongWords.sort(() => Math.random() - 0.5).slice(0, 10);
+    const shuffled = ccvcWords.sort(() => Math.random() - 0.5).slice(0, 10);
     setWords(shuffled);
   }, []);
 
@@ -215,7 +216,25 @@ export default function Level3({ onComplete }) {
       {showConfetti && <Confetti numberOfPieces={300} recycle={false} gravity={0.4} />}
       <div className="bg-white p-6 rounded-lg w-full max-w-md space-y-4 shadow-xl">
         <h2 className="text-2xl font-bold text-center">Level 3: Word Builders</h2>
-        
+
+        <div className="flex justify-center items-center gap-2 mb-2">
+          <div className="relative group">
+            <button className="text-blue-700 text-lg font-bold cursor-pointer" title="View instructions">ℹ️</button>
+            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <p><strong>Instructions:</strong></p>
+              <ul className="list-disc list-inside">
+                <li>Fill in the missing vowels in the word.</li>
+                <li>Once correct, say the word out loud.</li>
+                <li>You have 3 lives for each word.</li>
+                <li>After 3 incorrect tries, it skips to the next.</li>
+                <li>Get all 10 correct to pass the level!</li>
+              </ul>
+            </div>
+          </div>
+          <span className="text-sm text-gray-600 text-center">Complete the word and say it clearly.</span>
+        </div>
+
+
         <div className="text-center text-red-500 text-2xl">
           {"❤️".repeat(3 - safeAttempts)}{"🤍".repeat(safeAttempts)}
         </div>

@@ -50,13 +50,34 @@ const Level4Quiz_SD = ({ onComplete }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 overflow-visible">
       <div className="flex items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-lg mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
+        <div className="w-full max-w-lg mx-auto bg-white rounded-lg shadow-xl overflow-visible">
           <div className="px-6 py-4">
-            <h2 className="text-2xl font-bold text-center text-blue-700 mb-4">
-              Comprehension Quiz
-            </h2>
+
+            <div className="flex justify-center items-center gap-2 mb-4 relative">
+              <div className="relative group">
+                <button
+                  className="text-blue-700 text-lg font-bold cursor-pointer"
+                  title="View instructions"
+                >
+                  ℹ️
+                </button>
+                <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                  <p><strong>Instructions:</strong></p>
+                  <ul className="list-disc list-inside">
+                    <li>Read each question carefully.</li>
+                    <li>Select the best answer from the options.</li>
+                    <li>Make sure all questions are answered before submitting.</li>
+                    <li>You’ll get your score after submission.</li>
+                    <li>Try to get all 5 correct!</li>
+                  </ul>
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold text-center text-blue-700">
+                Comprehension Quiz
+              </h2>
+            </div>
 
             {submitted ? (
               <motion.div
@@ -65,21 +86,20 @@ const Level4Quiz_SD = ({ onComplete }) => {
                 transition={{ duration: 0.5 }}
                 className="text-center py-4"
               >
-                <div className={`text-4xl font-bold mb-4 ${
-                  score === questions.length
-                    ? 'text-green-500'
-                    : score >= questions.length / 2
+                <div className={`text-4xl font-bold mb-4 ${score === questions.length
+                  ? 'text-green-500'
+                  : score >= questions.length / 2
                     ? 'text-blue-500'
                     : 'text-amber-500'
-                }`}>
+                  }`}>
                   {score}/{questions.length}
                 </div>
                 <p className="text-lg text-gray-700 mb-6">
                   {score === questions.length
                     ? 'Perfect score! 🎉'
                     : score >= questions.length / 2
-                    ? 'Good job! 👍'
-                    : 'Keep practicing!'}
+                      ? 'Good job! 👍'
+                      : 'Keep practicing!'}
                 </p>
                 <button
                   onClick={() => {
@@ -103,11 +123,10 @@ const Level4Quiz_SD = ({ onComplete }) => {
                       {q.options.map((option, i) => (
                         <label
                           key={i}
-                          className={`flex items-center p-3 rounded-md cursor-pointer transition ${
-                            responses[index] === option
-                              ? 'bg-blue-50 border border-blue-200'
-                              : 'hover:bg-gray-50'
-                          }`}
+                          className={`flex items-center p-3 rounded-md cursor-pointer transition ${responses[index] === option
+                            ? 'bg-blue-50 border border-blue-200'
+                            : 'hover:bg-gray-50'
+                            }`}
                         >
                           <input
                             type="radio"
@@ -132,11 +151,10 @@ const Level4Quiz_SD = ({ onComplete }) => {
               <button
                 onClick={handleSubmit}
                 disabled={responses.some(response => response === '')}
-                className={`w-full py-3 rounded-lg font-medium transition ${
-                  responses.some(response => response === '')
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
+                className={`w-full py-3 rounded-lg font-medium transition ${responses.some(response => response === '')
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
               >
                 Submit Answers
               </button>

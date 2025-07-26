@@ -1,26 +1,20 @@
 <?php
 // File: public/api/bootstrap.php
 
-// DEV DEBUG (comment out for production)
-// ini_set('display_errors', '1');
-// ini_set('display_startup_errors', '1');
-// error_reporting(E_ALL);
-
-// PRODUCTION: hide notices & warnings
+// ── Error Reporting ──────────────────────────────
 ini_set('display_errors', '0');
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
-
-// ── CORS & JSON headers ─────────────────────────────────────────────
+// ── CORS & JSON Headers ──────────────────────────
 header('Content-Type: application/json; charset=utf-8');
 
-$origin  = $_SERVER['HTTP_ORIGIN'] ?? '';
-$allowed = [
-    'http://localhost:3000',        // development origin
-    'https://tvnhs-star.com'        // production origin
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$allowedOrigins = [
+    'http://localhost:3000',
+    'https://tvnhs-star.com'
 ];
 
-if (in_array($origin, $allowed, true)) {
+if (in_array($origin, $allowedOrigins, true)) {
     header("Access-Control-Allow-Origin: $origin");
     header('Access-Control-Allow-Credentials: true');
 }
@@ -28,11 +22,14 @@ if (in_array($origin, $allowed, true)) {
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, Access-Control-Allow-Credentials');
 
-// ── Handle Preflight Request ───────────────────────────────────────
+// ── Preflight Request Handling ───────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// ── Start Session ───────────────────────────────────────────────────
+// ── Session & DB Initialization ─────────────────
 session_start();
+
+// ✅ Load PDO connection from db_connection.php
+require_once __DIR__ . '/db_connection.php';

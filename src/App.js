@@ -159,7 +159,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="bg-stargreen-medium text-white text-center p-2">
-          <small>&copy; {new Date().getFullYear()} Tropical Village NHS</small>
+          <small>&copy; {new Date().getFullYear()} Tropical Village National High School</small>
         </footer>
       </div>
 

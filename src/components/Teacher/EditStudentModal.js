@@ -180,14 +180,20 @@ export default function EditStudentModal({ student, onClose, onSave }) {
             </div>
 
             <div>
-              <input
-                type="text"
-                name="grade_level"
-                placeholder="Grade Level"
-                value={formData.grade_level}
-                onChange={handleChange}
-                className="p-2 border w-full"
-              />
+<select
+  name="grade_level"
+  value={formData.grade_level}
+  onChange={handleChange}
+  className="p-2 border"
+  required
+>
+  <option value="">Select Grade Level</option>
+  <option value="Grade 7">Grade 7</option>
+  <option value="Grade 8">Grade 8</option>
+  <option value="Grade 9">Grade 9</option>
+  <option value="Grade 10">Grade 10</option>
+</select>
+
             </div>
 
             <div>

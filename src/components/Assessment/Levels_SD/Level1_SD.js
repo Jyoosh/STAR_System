@@ -70,27 +70,27 @@ export default function Level1_SD({ onComplete, onExit }) {
   };
 
   const handleSubmitManual = () => {
-  const expected = speechLetters[idx];
-  const userInput = manualInput.trim().toUpperCase();
+    const expected = speechLetters[idx];
+    const userInput = manualInput.trim().toUpperCase();
 
-  if (userInput === expected) {
-    setScore(prev => prev + 1);
-    playSound(dingSound);
-    nextSpeech();
-  } else {
-    const nextFailCount = failCount + 1;
-    setFailCount(nextFailCount);
-    setHasAnyMistake(true);
-    playSound(incorrectSound);
-
-    if (nextFailCount >= 3) {
-      setStatus(`❌ Incorrect. The answer was "${expected}".`);
-      setTimeout(nextSpeech, 1200);
+    if (userInput === expected) {
+      setScore(prev => prev + 1);
+      playSound(dingSound);
+      nextSpeech();
     } else {
-      setStatus(`❌ Try again (${nextFailCount}/3)`);
+      const nextFailCount = failCount + 1;
+      setFailCount(nextFailCount);
+      setHasAnyMistake(true);
+      playSound(incorrectSound);
+
+      if (nextFailCount >= 3) {
+        setStatus(`❌ Incorrect. The answer was "${expected}".`);
+        setTimeout(nextSpeech, 1200);
+      } else {
+        setStatus(`❌ Try again (${nextFailCount}/3)`);
+      }
     }
-  }
-};
+  };
 
 
   const handleSkip = () => {
@@ -135,16 +135,16 @@ export default function Level1_SD({ onComplete, onExit }) {
   };
 
   const renderHearts = () => {
-  return (
-    <div className="flex justify-center mb-2 space-x-1">
-      {[0, 1, 2].map(i => (
-        <span key={i} className="text-xl">
-          {i < 3 - failCount ? '❤️' : '🤍'}
-        </span>
-      ))}
-    </div>
-  );
-};
+    return (
+      <div className="flex justify-center mb-2 space-x-1">
+        {[0, 1, 2].map(i => (
+          <span key={i} className="text-xl">
+            {i < 3 - failCount ? '❤️' : '🤍'}
+          </span>
+        ))}
+      </div>
+    );
+  };
 
 
 
@@ -154,9 +154,33 @@ export default function Level1_SD({ onComplete, onExit }) {
       <div className="w-full sm:max-w-lg bg-white rounded-lg shadow-xl p-6 space-y-4">
         <h2 className="text-xl font-bold text-center text-blue-700">Level 1: Alphabeth Hunters</h2>
 
+        <div className="flex justify-center items-center gap-2 mb-2 relative z-20">
+          <div className="relative group">
+            <button
+              className="text-blue-700 text-lg font-bold cursor-pointer"
+              title="View instructions"
+            >
+              ℹ️
+            </button>
+            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+              <p><strong>Instructions:</strong></p>
+              <ul className="list-disc list-inside">
+                <li>Click ▶️ to listen for the letter.</li>
+                <li>Type the letter you hear.</li>
+                <li>You get 3 lives per letter.</li>
+                <li>Then match upper to lowercase to finish.</li>
+                <li>Get all correct to pass the level!</li>
+              </ul>
+            </div>
+          </div>
+          <span className="text-sm text-gray-600 text-center">
+            Listen, type, and match to complete the level.
+          </span>
+        </div>
+
         {step === 'speech' && (
           <>
-          {renderHearts()}
+            {renderHearts()}
             <p className="text-center text-gray-600">Listen and type the letter you heard.</p>
 
             <button
@@ -201,7 +225,7 @@ export default function Level1_SD({ onComplete, onExit }) {
                   <span className="font-bold text-indigo-700">{pair.upper}</span>
                   <select
                     className={`border rounded px-2 py-1 transition ${matchResults[pair.upper] === 'correct' ? 'bg-green-100' :
-                        matchResults[pair.upper] === 'incorrect' ? 'bg-red-100' : ''
+                      matchResults[pair.upper] === 'incorrect' ? 'bg-red-100' : ''
                       }`}
                     value={matched[pair.upper]?.toLowerCase() || ''}
                     onChange={(e) =>

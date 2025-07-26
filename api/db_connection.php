@@ -1,6 +1,4 @@
 <?php
-// api/db_connection.php
-require __DIR__ . '/bootstrap.php';
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   exit;
@@ -23,8 +21,9 @@ try {
   $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (\PDOException $e) {
   http_response_code(500);
-  echo json_encode(['error' => 'Database connection failed']);
+  echo json_encode(['error' => 'Database connection failed', 'details' => $e->getMessage()]);
   exit;
 }
+
 
 ?>

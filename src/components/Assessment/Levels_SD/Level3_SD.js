@@ -3,14 +3,14 @@ import React, { useEffect, useState, useCallback } from 'react';
 // Question format: { cue: "...", answer: "..." }
 const questions = [
   { cue: 'Put it on the table', answer: 'table' },
-  { cue: 'Turn on the lamp', answer: 'lamp' },            
+  { cue: 'Turn on the lamp', answer: 'lamp' },
   { cue: 'Wear your shoes', answer: 'shoes' },
   { cue: 'Close the door', answer: 'door' },
   { cue: 'Drink from the glass', answer: 'glass' },
   { cue: 'Get the book', answer: 'book' },
   { cue: 'Wash your hands', answer: 'hands' },
   { cue: 'Open the window', answer: 'window' },
-  { cue: 'Throw the toy', answer: 'toy' },                
+  { cue: 'Throw the toy', answer: 'toy' },
   { cue: 'Sit on the chair', answer: 'chair' }
 ];
 
@@ -110,14 +110,39 @@ export default function Level3_SD({ onComplete }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6">
       <div className="absolute inset-0 bg-gradient-to-br from-green-100 via-white to-green-200 bg-opacity-70 backdrop-blur-md transition-opacity duration-300"></div>
-      <div className="relative z-10 w-full sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-green-100 transition-all duration-300 ease-out max-h-[90vh] overflow-y-auto">
+      <div className="relative z-10 w-full sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-green-100 transition-all duration-300 ease-out max-h-[90vh] overflow-visible">
 
         <h2 className="text-xl sm:text-2xl font-bold text-center text-green-700 mb-2">
           Level 3: Jumbled Letters, Listen, and Type
         </h2>
 
+        <div className="flex justify-center items-center gap-2 mb-4 relative z-20">
+          <div className="relative group">
+            <button
+              className="text-green-700 text-lg font-bold cursor-pointer"
+              title="View instructions"
+            >
+              ℹ️
+            </button>
+            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+              <p><strong>Instructions:</strong></p>
+              <ul className="list-disc list-inside">
+                <li>Click 🔊 to hear the sentence.</li>
+                <li>Look at the jumbled letters.</li>
+                <li>Type the missing word from the sentence.</li>
+                <li>You get 3 lives per word.</li>
+                <li>Complete all 10 to pass!</li>
+              </ul>
+            </div>
+          </div>
+          <span className="text-sm text-gray-600 text-center">
+            Listen, unjumble, and type the correct word.
+          </span>
+        </div>
+
+
         {isAnswering && renderHearts()}
-        
+
         <p className="text-center text-gray-700 mb-4">
           Listen to the sentence. Then type the correct word using the jumbled letters.
         </p>
