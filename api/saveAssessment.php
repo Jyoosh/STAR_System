@@ -79,16 +79,14 @@ if (!preg_match('/^[A-Za-z0-9_-]+$/', $user_id)) {
     exit;
 }
 
-
 $total_score = intval($input['total_score']);
 $currentLevel = trim($input['currentLevel']);
 $timestamp = isset($input['timestamp'])
-  ? (new DateTime($input['timestamp'], new DateTimeZone('UTC')))
+    ? (new DateTime($input['timestamp'], new DateTimeZone('UTC')))
         ->setTimezone(new DateTimeZone('Asia/Manila'))
         ->format('Y-m-d H:i:s')
-  : date('Y-m-d H:i:s');
+    : date('Y-m-d H:i:s');
 $assessment_type = trim($input['assessment_type'] ?? 'Without Speech Defect');
-
 $levelScores = $input['levelScores'];
 
 // ─────────────────────────────────────────────
@@ -122,24 +120,43 @@ if ($total_score > $max_score) {
 // ─────────────────────────────────────────────
 // ✅ Final Reading Level (Frontend-controlled)
 // ─────────────────────────────────────────────
-
 $reading_level = isset($input['reading_level']) ? trim($input['reading_level']) : 'Level 1';
 $reading_level = $currentLevel;
 
-// Optional: sanitize for safety
 $validLevels = ['Level 1', 'Level 2', 'Level 3', 'Level 4'];
 if (!in_array($reading_level, $validLevels)) {
     $reading_level = 'Level 1';
 }
 
-
-// Accuracy is still useful to track
 $accuracy = $max_score > 0 ? round(($total_score / $max_score) * 100, 2) : 0.0;
 
 // ─────────────────────────────────────────────
-// ✅ Insert to Database
+// ✅ Resolve student_id from user_id
 // ─────────────────────────────────────────────
 try {
+    $isNumeric = ctype_digit((string) $user_id);
+
+    if ($isNumeric) {
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ? AND role = 'Student' AND is_deleted = 0 LIMIT 1");
+    } else {
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE user_id = ? AND role = 'Student' AND is_deleted = 0 LIMIT 1");
+    }
+
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+
+    if (!$user) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => "User ID not found or inactive"]);
+        exit;
+    }
+
+    $student_id = $user['id'];
+
+    // ─────────────────────────────────────────
+    // ✅ Insert to assessment_results
+    // ─────────────────────────────────────────
     $stmt = $pdo->prepare("
         INSERT INTO assessment_results (
             student_id, passage_id, assessed_at, accuracy, reading_level, level,
@@ -149,7 +166,7 @@ try {
     ");
 
     $success = $stmt->execute([
-        $user_id,
+        $student_id,
         1, // default passage_id
         $timestamp,
         $accuracy,
@@ -173,7 +190,7 @@ try {
         'accuracy' => $accuracy,
         'reading_level' => $reading_level,
         'max_score' => $max_score,
-        'timestamp' => $timestamp // ✅ added for debug/confirmation
+        'timestamp' => $timestamp
     ]);
 
 } catch (Exception $e) {

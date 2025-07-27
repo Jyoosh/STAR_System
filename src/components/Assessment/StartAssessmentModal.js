@@ -69,6 +69,8 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
       reading_level: reading_level || currentLevel, // fallback
     };
 
+    console.log('Payload:', JSON.stringify(payload, null, 2));
+
     try {
       const response = await fetch(`${API_BASE}/saveAssessment.php`, {
         method: 'POST',

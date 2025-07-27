@@ -74,3 +74,19 @@
 [2025-07-17 10:09:17] {"user_id":"8","total_score":30,"currentLevel":"Level 4","levelScores":{"level1":10,"level2":10,"level3":10,"level4":0},"timestamp":"2025-07-17T02:09:17.335Z","assessment_type":"With Speech Defect","reading_level":"Level 4"}
 [2025-07-17 20:48:56] {"user_id":"STD-1","total_score":10,"currentLevel":"Level 2","levelScores":{"level1":10,"level2":0,"level3":0,"level4":0},"timestamp":"2025-07-17T12:48:56.563Z","assessment_type":"Without Speech Defect","reading_level":"Level 2"}
 [2025-07-17 20:49:23] {"user_id":"8","total_score":10,"currentLevel":"Level 2","levelScores":{"level1":10,"level2":0,"level3":0,"level4":0},"timestamp":"2025-07-17T12:49:23.894Z","assessment_type":"Without Speech Defect","reading_level":"Level 2"}
+[2025-07-27 20:14:22] {"user_id":"STD-1","total_score":38,"currentLevel":"Level 4","levelScores":{"level1":10,"level2":10,"level3":10,"level4":8},"timestamp":"2025-07-27T12:14:22.957Z","assessment_type":"Without Speech Defect","reading_level":"Level 4"}
+[2025-07-27 20:25:31] {"user_id":"8","total_score":38,"currentLevel":"Level 4","levelScores":{"level1":10,"level2":10,"level3":10,"level4":8},"timestamp":"2025-07-27T12:25:31.691Z","assessment_type":"Without Speech Defect","reading_level":"Level 4"}
+[2025-07-27 20:28:40] {"user_id":"8","total_score":38,"currentLevel":"Level 4","levelScores":{"level1":10,"level2":10,"level3":10,"level4":8},"timestamp":"2025-07-27T12:28:40.891Z","assessment_type":"Without Speech Defect","reading_level":"Level 4"}
+[2025-07-27 20:29:22] 
+[2025-07-27 20:31:07] 
+[2025-07-27 20:31:43] 
+[2025-07-27 20:36:17] {"user_id":"8","total_score":36,"currentLevel":"Level 4","levelScores":{"level1":10,"level2":10,"level3":10,"level4":6},"timestamp":"2025-07-27T12:36:17.268Z","assessment_type":"Without Speech Defect","reading_level":"Level 4"}
+[2025-07-27 20:38:59] {"user_id":"8","total_score":38,"currentLevel":"Level 4","levelScores":{"level1":10,"level2":10,"level3":10,"level4":8},"timestamp":"2025-07-27T12:38:59.859Z","assessment_type":"With Speech Defect","reading_level":"Level 4"}
+[2025-07-27 20:40:58] {"user_id":"8","total_score":10,"currentLevel":"Level 2","levelScores":{"level1":10,"level2":0,"level3":0,"level4":0},"timestamp":"2025-07-27T12:40:58.463Z","assessment_type":"Without Speech Defect","reading_level":"Level 2"}
+[2025-07-27 20:41:56] 
+[2025-07-27 20:50:44] {"user_id":"8","total_score":10,"currentLevel":"Level 2","levelScores":{"level1":10,"level2":0,"level3":0,"level4":0},"timestamp":"2025-07-27T12:50:44.466Z","assessment_type":"Without Speech Defect","reading_level":"Level 2"}
+[2025-07-27 20:51:51] 
+[2025-07-27 21:04:38] {"user_id":"8","total_score":10,"currentLevel":"Level 2","levelScores":{"level1":10,"level2":0,"level3":0,"level4":0},"timestamp":"2025-07-27T13:04:38.630Z","assessment_type":"Without Speech Defect","reading_level":"Level 2"}
+[2025-07-27 21:08:46] {"total_score":10,"currentLevel":"Level 2","levelScores":{"level1":10,"level2":0,"level3":0,"level4":0},"timestamp":"2025-07-27T13:08:46.600Z","assessment_type":"Without Speech Defect","reading_level":"Level 2"}
+[2025-07-27 21:09:59] {"user_id":"8","total_score":10,"currentLevel":"Level 2","levelScores":{"level1":10,"level2":0,"level3":0,"level4":0},"timestamp":"2025-07-27T13:09:59.345Z","assessment_type":"Without Speech Defect","reading_level":"Level 2"}
+[2025-07-27 21:12:57] {"user_id":"8","total_score":10,"currentLevel":"Level 2","levelScores":{"level1":10,"level2":0,"level3":0,"level4":0},"timestamp":"2025-07-27T13:12:57.442Z","assessment_type":"Without Speech Defect","reading_level":"Level 2"}
