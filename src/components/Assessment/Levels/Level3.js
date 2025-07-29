@@ -1,6 +1,7 @@
 // src/components/Assessment/Levels/Level3.js
 import React, { useState, useEffect, useRef } from 'react';
 import Confetti from 'react-confetti';
+import TooltipInfo from '../../common/TooltipInfo';
 
 const dingSound = '/assets/audio/sound_effects/ding.mp3';
 const incorrectSound = '/assets/audio/sound_effects/incorrect.mp3';
@@ -218,22 +219,18 @@ export default function Level3({ onComplete }) {
         <h2 className="text-2xl font-bold text-center">Level 3: Word Builders</h2>
 
         <div className="flex justify-center items-center gap-2 mb-2">
-          <div className="relative group">
-            <button className="text-blue-700 text-lg font-bold cursor-pointer" title="View instructions">ℹ️</button>
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-              <p><strong>Instructions:</strong></p>
-              <ul className="list-disc list-inside">
-                <li>Fill in the missing vowels in the word.</li>
-                <li>Once correct, say the word out loud.</li>
-                <li>You have 3 lives for each word.</li>
-                <li>After 3 incorrect tries, it skips to the next.</li>
-                <li>Get all 10 correct to pass the level!</li>
-              </ul>
-            </div>
-          </div>
+          <TooltipInfo
+            title="Instructions"
+            content={[
+              'Fill in the missing vowels in the word.',
+              'Once correct, say the word out loud.',
+              'You have 3 lives for each word.',
+              'After 3 incorrect tries, it skips to the next.',
+              'Get all 10 correct to pass the level!',
+            ]}
+          />
           <span className="text-sm text-gray-600 text-center">Complete the word and say it clearly.</span>
         </div>
-
 
         <div className="text-center text-red-500 text-2xl">
           {"❤️".repeat(3 - safeAttempts)}{"🤍".repeat(safeAttempts)}

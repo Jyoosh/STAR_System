@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Confetti from 'react-confetti';
 import { toast } from 'react-toastify';
+import TooltipInfo from '../../common/TooltipInfo';
 
 const sampleWords = {
   A: 'Apple', B: 'Ball', C: 'Cat', D: 'Dog', E: 'Elephant',
@@ -154,29 +155,22 @@ export default function Level1_SD({ onComplete, onExit }) {
       <div className="w-full sm:max-w-lg bg-white rounded-lg shadow-xl p-6 space-y-4">
         <h2 className="text-xl font-bold text-center text-blue-700">Level 1: Alphabeth Hunters</h2>
 
-        <div className="flex justify-center items-center gap-2 mb-2 relative z-20">
-          <div className="relative group">
-            <button
-              className="text-blue-700 text-lg font-bold cursor-pointer"
-              title="View instructions"
-            >
-              ℹ️
-            </button>
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-              <p><strong>Instructions:</strong></p>
-              <ul className="list-disc list-inside">
-                <li>Click ▶️ to listen for the letter.</li>
-                <li>Type the letter you hear.</li>
-                <li>You get 3 lives per letter.</li>
-                <li>Then match upper to lowercase to finish.</li>
-                <li>Get all correct to pass the level!</li>
-              </ul>
-            </div>
-          </div>
+        <div className="flex justify-center items-center gap-2 mb-2">
+          <TooltipInfo
+            title="Instructions"
+            content={[
+              'Click ▶️ to listen for the letter.',
+              'Type the letter you hear.',
+              'You get 3 lives per letter.',
+              'Then match upper to lowercase to finish.',
+              'Get all correct to pass the level!',
+            ]}
+          />
           <span className="text-sm text-gray-600 text-center">
             Listen, type, and match to complete the level.
           </span>
         </div>
+
 
         {step === 'speech' && (
           <>

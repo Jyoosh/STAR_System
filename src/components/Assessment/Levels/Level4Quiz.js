@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import TooltipInfo from '../../common/TooltipInfo';
 
 export const questions = [
   {
@@ -33,7 +34,7 @@ const Level4Quiz = ({ onComplete }) => {
   const [responses, setResponses] = useState(Array(questions.length).fill(''));
   const [score, setScore] = useState(0);
   const [submitted, setSubmitted] = useState(false);
-  const [hasSentResult, setHasSentResult] = useState(false); // guard
+  const [hasSentResult, setHasSentResult] = useState(false);
 
   const handleChange = (index, value) => {
     const newResponses = [...responses];
@@ -59,20 +60,21 @@ const Level4Quiz = ({ onComplete }) => {
             </h2>
 
             <div className="flex justify-center items-center gap-2 mb-4">
-              <div className="relative group z-20">
-                <button className="text-blue-700 text-lg font-bold cursor-pointer" title="View instructions">ℹ️</button>
-                <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                  <p><strong>Instructions:</strong></p>
-                  <ul className="list-disc list-inside">
-                    <li>Read each question carefully.</li>
-                    <li>Select the best answer from the choices.</li>
-                    <li>You must answer all questions before submitting.</li>
-                  </ul>
-                </div>
-              </div>
-              <span className="text-sm text-gray-600 text-center">Choose the correct answers to test your understanding.</span>
+              <TooltipInfo
+                content={
+                  <div className="text-left text-sm">
+                    <ul className="list-disc list-inside">
+                      <li>Read each question carefully.</li>
+                      <li>Select the best answer from the choices.</li>
+                      <li>You must answer all questions before submitting.</li>
+                    </ul>
+                  </div>
+                }
+              />
+              <span className="text-sm text-gray-600 text-center">
+                Choose the correct answers to test your understanding.
+              </span>
             </div>
-
 
             {submitted ? (
               <motion.div

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Confetti from 'react-confetti';
+import TooltipInfo from '../../common/TooltipInfo';
 
 const cvcWords = [
   { word: 'bag', context: 'Say "bag" as in "The bag is heavy."' },
@@ -192,21 +193,19 @@ export default function Level2({ onComplete, debugAutoPass }) {
       <div className="w-full sm:max-w-lg md:max-w-xl bg-white shadow-xl rounded-lg space-y-4 p-4 sm:p-6 md:p-8">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-700">Level 2: Sound Rangers</h2>
 
-        <div className="flex justify-center items-center gap-2 mb-2">
-          <div className="relative group">
-            <button className="text-blue-700 text-lg font-bold cursor-pointer" title="View instructions">ℹ️</button>
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-              <p><strong>Instructions:</strong></p>
-              <ul className="list-disc list-inside">
-                <li>Say the word you see on screen.</li>
-                <li>You have 3 lives for each word.</li>
-                <li>After 3 incorrect attempts, it skips to the next word.</li>
-                <li>Get all 10 correct to pass the level!</li>
-              </ul>
-            </div>
-          </div>
-          <span className="text-sm text-gray-600 text-center">Say each word clearly when it appears.</span>
-        </div>
+      <div className="flex justify-center items-center gap-2 mb-2">
+        {/* tooltip reusable component - TooltipInfo.js */}
+        <TooltipInfo
+          title="Instructions"
+          content={[
+            'Say the word you see on screen.',
+            'You have 3 lives for each word.',
+            'After 3 incorrect attempts, it skips to the next word.',
+            'Get all 10 correct to pass the level!',
+          ]}
+        />
+        <span className="text-sm text-gray-600 text-center">Say each word clearly when it appears.</span>
+      </div>
 
 
         {completed ? (

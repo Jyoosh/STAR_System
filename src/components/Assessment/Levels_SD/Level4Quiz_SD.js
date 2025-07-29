@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import TooltipInfo from '../../common/TooltipInfo';
 
 const questions = [
   {
@@ -56,24 +57,19 @@ const Level4Quiz_SD = ({ onComplete }) => {
           <div className="px-6 py-4">
 
             <div className="flex justify-center items-center gap-2 mb-4 relative">
-              <div className="relative group">
-                <button
-                  className="text-blue-700 text-lg font-bold cursor-pointer"
-                  title="View instructions"
-                >
-                  ℹ️
-                </button>
-                <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                  <p><strong>Instructions:</strong></p>
-                  <ul className="list-disc list-inside">
-                    <li>Read each question carefully.</li>
-                    <li>Select the best answer from the options.</li>
-                    <li>Make sure all questions are answered before submitting.</li>
-                    <li>You’ll get your score after submission.</li>
-                    <li>Try to get all 5 correct!</li>
-                  </ul>
-                </div>
-              </div>
+              <TooltipInfo
+                content={
+                  <div>
+                    <ul className="list-disc list-inside">
+                      <li>Read each question carefully.</li>
+                      <li>Select the best answer from the options.</li>
+                      <li>Make sure all questions are answered before submitting.</li>
+                      <li>You’ll get your score after submission.</li>
+                      <li>Try to get all 5 correct!</li>
+                    </ul>
+                  </div>
+                }
+              />
               <h2 className="text-2xl font-bold text-center text-blue-700">
                 Comprehension Quiz
               </h2>

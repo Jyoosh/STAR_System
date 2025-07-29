@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import TooltipInfo from '../../common/TooltipInfo';
 
 const wordList = [
   "bag", "bed", "kid", "log", "rub", "cat", "red", "win", "cop", "tub"
@@ -98,24 +99,16 @@ export default function Level2_SD({ onComplete }) {
           Level 2: CVC Words
         </h2>
 
-        <div className="flex justify-center items-center gap-2 mb-4 relative z-20">
-          <div className="relative group">
-            <button
-              className="text-green-700 text-lg font-bold cursor-pointer"
-              title="View instructions"
-            >
-              ℹ️
-            </button>
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-              <p><strong>Instructions:</strong></p>
-              <ul className="list-disc list-inside">
-                <li>Click 🔊 to listen to a CVC word.</li>
-                <li>Type exactly what you hear.</li>
-                <li>You get 3 lives per word.</li>
-                <li>Try not to skip. Get all 10 correct to pass!</li>
-              </ul>
-            </div>
-          </div>
+        <div className="flex justify-center items-center gap-2 mb-4">
+          <TooltipInfo
+            title="Instructions"
+            content={[
+              'Click 🔊 to listen to a CVC word.',
+              'Type exactly what you hear.',
+              'You get 3 lives per word.',
+              'Try not to skip. Get all 10 correct to pass!',
+            ]}
+          />
           <span className="text-sm text-gray-600 text-center">
             Listen and type each word to complete the level.
           </span>

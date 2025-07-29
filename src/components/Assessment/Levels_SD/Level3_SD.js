@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import TooltipInfo from '../../common/TooltipInfo';
 
 // Question format: { cue: "...", answer: "..." }
 const questions = [
@@ -116,36 +117,23 @@ export default function Level3_SD({ onComplete }) {
           Level 3: Jumbled Letters, Listen, and Type
         </h2>
 
-        <div className="flex justify-center items-center gap-2 mb-4 relative z-20">
-          <div className="relative group">
-            <button
-              className="text-green-700 text-lg font-bold cursor-pointer"
-              title="View instructions"
-            >
-              ℹ️
-            </button>
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[300px] text-sm bg-white border border-gray-300 shadow-lg rounded p-3 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-              <p><strong>Instructions:</strong></p>
-              <ul className="list-disc list-inside">
-                <li>Click 🔊 to hear the sentence.</li>
-                <li>Look at the jumbled letters.</li>
-                <li>Type the missing word from the sentence.</li>
-                <li>You get 3 lives per word.</li>
-                <li>Complete all 10 to pass!</li>
-              </ul>
-            </div>
-          </div>
+        <div className="flex justify-center items-center gap-2 mb-4">
+          <TooltipInfo
+            title="Instructions"
+            content={[
+              'Click 🔊 to hear the sentence.',
+              'Look at the jumbled letters.',
+              'Type the missing word from the sentence.',
+              'You get 3 lives per word.',
+              'Complete all 10 to pass!',
+            ]}
+          />
           <span className="text-sm text-gray-600 text-center">
             Listen, unjumble, and type the correct word.
           </span>
         </div>
 
-
         {isAnswering && renderHearts()}
-
-        <p className="text-center text-gray-700 mb-4">
-          Listen to the sentence. Then type the correct word using the jumbled letters.
-        </p>
 
         <div className="flex justify-center mb-3">
           <button
