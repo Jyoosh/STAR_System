@@ -227,13 +227,13 @@ export default function Level1({ onComplete }) {
           <div className="flex justify-center items-center gap-2">
             <TooltipInfo
               content={[
-                'Listen to the letter and say it out loud.',
+                'Say the letters aloud.',
                 'You have 3 lives per letter.',
                 'After all 5 letters, match uppercase to lowercase.',
                 'Get all correct to pass this level.',
               ]}
             />
-            <span className="text-sm text-gray-600 text-center">Say the letters you hear and match them below.</span>
+            <span className="text-sm text-gray-600 text-center">Say the letter and match them below.</span>
           </div>
         </div>
 

@@ -16,7 +16,9 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [currentLevel, setCurrentLevel] = useState('start');
   const [showConfetti, setShowConfetti] = useState(false);
-  const [level1FailedScore, setLevel1FailedScore] = useState(null);
+  const [level1FailedScore, setLevel1FailedScore] = useState(0);
+  const [, setLevel2FailedScore] = useState(0);
+  const [, setLevel3FailedScore] = useState(0);
   const [finalResult, setFinalResult] = useState(null);
   const [levelResult, setLevelResult] = useState(null);
   const [debugUnlocked, setDebugUnlocked] = useState(false);
@@ -105,7 +107,9 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
 
   const handleLevelComplete = async (level, score, passed) => {
     const levelNum = Number(level.replace('level', ''));
-    const updated = { ...scores, [`level${levelNum}`]: score };
+    const cappedScore = Math.min(score, 10);
+    const updated = { ...scores, [`level${levelNum}`]: cappedScore };
+
 
     // Reset future levels
     for (let i = levelNum + 1; i <= 4; i++) updated[`level${i}`] = 0;
@@ -135,7 +139,9 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
         onSaveComplete();  // 🔁 trigger parent re-fetch
       }
 
-      if (levelNum === 1) setLevel1FailedScore(score);
+      if (levelNum === 1) setLevel1FailedScore(cappedScore);
+      if (levelNum === 2) setLevel2FailedScore(cappedScore);
+      if (levelNum === 3) setLevel3FailedScore(cappedScore);
       setCurrentLevel(`level${levelNum}Failed`);
       return;
     }
@@ -155,7 +161,8 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
 
     setHasFinalized(true);
 
-    const level4 = rawScore ? rawScore * 2 : 0;
+    const level4 = Math.min(rawScore ? rawScore * 2 : 0, 10);
+
     const updated = { ...scores, level4 };
     const total = Object.values(updated).reduce((sum, s) => sum + s, 0);
 
@@ -426,7 +433,7 @@ export default function StartAssessmentModal({ onClose, onComplete, debugAutoPas
         return (
           <div className="text-center space-y-4">
             <h2 className="text-xl font-bold text-red-600">Level 2: CVC Words</h2>
-            <p>✅ You finished! Your score: {scores.level2} out of 10.</p>
+            <p>✅ You finished! Your score: {levelResult?.score} out of 10.</p>
             <p>❌ You must get a perfect score to proceed to the next level.</p>
             <p>Your reading level is <strong>Level 2</strong>.</p>
             <div className="flex gap-4 mt-6">

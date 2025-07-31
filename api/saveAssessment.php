@@ -79,7 +79,7 @@ if (!preg_match('/^[A-Za-z0-9_-]+$/', $user_id)) {
     exit;
 }
 
-$total_score = intval($input['total_score']);
+$total_score = $level1 + $level2 + $level3 + $level4;
 $currentLevel = trim($input['currentLevel']);
 $timestamp = isset($input['timestamp'])
     ? (new DateTime($input['timestamp'], new DateTimeZone('UTC')))
@@ -97,10 +97,11 @@ function getScore($scores, $key)
     return isset($scores[$key]) && is_numeric($scores[$key]) ? intval($scores[$key]) : 0;
 }
 
-$level1 = getScore($levelScores, 'level1');
-$level2 = getScore($levelScores, 'level2');
-$level3 = getScore($levelScores, 'level3');
-$level4 = getScore($levelScores, 'level4');
+$level1 = min(getScore($levelScores, 'level1'), 10);
+$level2 = min(getScore($levelScores, 'level2'), 10);
+$level3 = min(getScore($levelScores, 'level3'), 10);
+$level4 = min(getScore($levelScores, 'level4'), 10);
+
 
 // ─────────────────────────────────────────────
 // ✅ Validate Total Score Limit

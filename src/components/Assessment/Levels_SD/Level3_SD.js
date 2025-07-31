@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import TooltipInfo from '../../common/TooltipInfo';
 
 // Question format: { cue: "...", answer: "..." }
@@ -25,12 +25,14 @@ export default function Level3_SD({ onComplete }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [input, setInput] = useState('');
   const [feedback, setFeedback] = useState(null);
-  const [score, setScore] = useState(0);
+  const [, setScore] = useState(0);
   const [attemptsLeft, setAttemptsLeft] = useState(3);
   const [isAnswering, setIsAnswering] = useState(true);
 
   const current = shuffledQuestions[currentIndex];
   const jumbledLetters = shuffleArray(current.answer.toUpperCase().split('')).join(' ');
+
+  const scoreRef = useRef(0);
 
   const playCue = useCallback(() => {
     const utter = new SpeechSynthesisUtterance(current.cue);
@@ -59,11 +61,13 @@ export default function Level3_SD({ onComplete }) {
 
     if (isCorrect) {
       playCorrectSound();
-      setScore(prev => prev + 1);
+      scoreRef.current += 1;              // <-- critical
+      setScore(scoreRef.current);         // ensure visible update
       setFeedback('✅ Correct!');
       setIsAnswering(false);
       setTimeout(goToNext, 1000);
-    } else {
+    }
+    else {
       playIncorrectSound();
       const remaining = attemptsLeft - 1;
       setAttemptsLeft(remaining);
@@ -93,8 +97,9 @@ export default function Level3_SD({ onComplete }) {
     if (currentIndex + 1 < shuffledQuestions.length) {
       setCurrentIndex(prev => prev + 1);
     } else {
-      const passed = score === 10;
-      onComplete(score, passed);
+      const finalScore = scoreRef.current;    // ✅ always correct
+      const passed = finalScore === 10;
+      onComplete(finalScore, passed);
     }
   };
 
@@ -109,9 +114,8 @@ export default function Level3_SD({ onComplete }) {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6">
-      <div className="absolute inset-0 bg-gradient-to-br from-green-100 via-white to-green-200 bg-opacity-70 backdrop-blur-md transition-opacity duration-300"></div>
-      <div className="relative z-10 w-full sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-green-100 transition-all duration-300 ease-out max-h-[90vh] overflow-visible">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center px-4 sm:px-6">
+      <div className="relative z-10 w-full sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-200 max-h-[90vh] overflow-visible">
 
         <h2 className="text-xl sm:text-2xl font-bold text-center text-green-700 mb-2">
           Level 3: Jumbled Letters, Listen, and Type

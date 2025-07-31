@@ -91,12 +91,17 @@ export default function Level2({ onComplete, debugAutoPass }) {
       setCompleted(true);
       setShowConfetti(true);
       setStatus('🎉 Level complete!');
-      const finalScore = scoreRef.current;
-      const passed = finalScore === totalItems;
-      setTimeout(() => onComplete(finalScore, passed), 1500);
 
+      // Use `score` directly from React state for consistency
+      setTimeout(() => {
+        console.log("✅ Final Score:", scoreRef.current, "| UI Score:", score);
+        const finalScore = scoreRef.current;
+        const passed = finalScore === totalItems;
+        onComplete(finalScore, passed);
+      }, 1500);
     }
-  }, [onComplete]);
+  }, [onComplete, score]);
+
 
   const startListening = () => {
     if (!recognitionRef.current || recognitionRunningRef.current) return;
@@ -193,19 +198,19 @@ export default function Level2({ onComplete, debugAutoPass }) {
       <div className="w-full sm:max-w-lg md:max-w-xl bg-white shadow-xl rounded-lg space-y-4 p-4 sm:p-6 md:p-8">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-blue-700">Level 2: Sound Rangers</h2>
 
-      <div className="flex justify-center items-center gap-2 mb-2">
-        {/* tooltip reusable component - TooltipInfo.js */}
-        <TooltipInfo
-          title="Instructions"
-          content={[
-            'Say the word you see on screen.',
-            'You have 3 lives for each word.',
-            'After 3 incorrect attempts, it skips to the next word.',
-            'Get all 10 correct to pass the level!',
-          ]}
-        />
-        <span className="text-sm text-gray-600 text-center">Say each word clearly when it appears.</span>
-      </div>
+        <div className="flex justify-center items-center gap-2 mb-2">
+          {/* tooltip reusable component - TooltipInfo.js */}
+          <TooltipInfo
+            title="Instructions"
+            content={[
+              'Say the word you see on screen.',
+              'You have 3 lives for each word.',
+              'After 3 incorrect attempts, it skips to the next word.',
+              'Get all 10 correct to pass the level!',
+            ]}
+          />
+          <span className="text-sm text-gray-600 text-center">Say each word clearly when it appears.</span>
+        </div>
 
 
         {completed ? (

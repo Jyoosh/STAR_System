@@ -33,8 +33,8 @@ const questions = [
 const Level4Quiz_SD = ({ onComplete }) => {
   const [responses, setResponses] = useState(Array(questions.length).fill(''));
   const [score, setScore] = useState(0);
-  const [hasSentResult, setHasSentResult] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [hasSentResult, setHasSentResult] = useState(false);
 
   const handleChange = (index, value) => {
     const newResponses = [...responses];
@@ -51,28 +51,29 @@ const Level4Quiz_SD = ({ onComplete }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 overflow-visible">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-lg mx-auto bg-white rounded-lg shadow-xl overflow-visible">
+        <div className="w-full max-w-lg mx-auto bg-white rounded-lg shadow-xl overflow-visible z-10">
           <div className="px-6 py-4">
+            <h2 className="text-2xl font-bold text-center text-blue-700 mb-4">
+              Comprehension Quiz
+            </h2>
 
-            <div className="flex justify-center items-center gap-2 mb-4 relative">
+            <div className="flex justify-center items-center gap-2 mb-4">
               <TooltipInfo
                 content={
-                  <div>
+                  <div className="text-left text-sm">
                     <ul className="list-disc list-inside">
                       <li>Read each question carefully.</li>
-                      <li>Select the best answer from the options.</li>
-                      <li>Make sure all questions are answered before submitting.</li>
-                      <li>You’ll get your score after submission.</li>
-                      <li>Try to get all 5 correct!</li>
+                      <li>Select the best answer from the choices.</li>
+                      <li>You must answer all questions before submitting.</li>
                     </ul>
                   </div>
                 }
               />
-              <h2 className="text-2xl font-bold text-center text-blue-700">
-                Comprehension Quiz
-              </h2>
+              <span className="text-sm text-gray-600 text-center">
+                Choose the correct answers to test your understanding.
+              </span>
             </div>
 
             {submitted ? (

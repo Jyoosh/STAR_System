@@ -246,7 +246,7 @@ export default function SpeechDefectAssessment({ onComplete, onExit, onReturnToS
 
       {result && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-100 via-white to-green-200 bg-opacity-70 backdrop-blur-md"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-white to-indigo-200 bg-opacity-70 backdrop-blur-md transition-opacity duration-300"></div>
           <div className="relative z-10 w-full sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-green-100 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl sm:text-2xl font-bold text-center text-green-700 mb-4">
               Level {result.levelNumber}: {result.title}
